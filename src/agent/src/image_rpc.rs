@@ -148,6 +148,7 @@ impl ImageService {
             "image_client.config.auth set to: {}",
             !aa_kbc_params.is_empty()
         );
+
         self.image_client.lock().await.config.auth = !aa_kbc_params.is_empty();
         let decrypt_config = format!("provider:attestation-agent:{}", aa_kbc_params);
 
@@ -224,6 +225,8 @@ impl ImageService {
         let bundle_path = Path::new(CONTAINER_BASE).join(cid).join("images");
         fs::create_dir_all(&bundle_path)?;
         info!(sl(), "pull image {:?}, bundle path {:?}", cid, bundle_path);
+
+        info!(sl(), "KS-M4GIC: B3G1N: GC Image Pull ({:?})", image);
 
         let decrypt_config = self.get_security_config().await?;
 
