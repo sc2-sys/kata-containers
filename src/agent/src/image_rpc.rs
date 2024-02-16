@@ -179,6 +179,7 @@ impl ImageService {
             .await;
         match res {
             Ok(image) => {
+                info!(sl(), "KS-M4GIC: B3G1N:  pull_image_for_container called");
                 info!(
                     sl(),
                     "pull and unpack image {:?}, cid: {:?}, with image-rs succeed. ", image, cid
@@ -201,6 +202,9 @@ impl ImageService {
 
     /// Pull image when creating container and return the bundle path with rootfs.
     pub async fn pull_image_for_container(
+
+        info!(sl(), "KS-M4GIC: B3G1N:  pull_image_for_container called");
+
         &self,
         image: &str,
         cid: &str,
@@ -239,6 +243,9 @@ impl ImageService {
 
     /// Pull image when recieving the PullImageRequest and return the image digest.
     async fn pull_image(&self, req: &image::PullImageRequest) -> Result<String> {
+
+        info!(sl(), "KS-M4GIC: B3G1N:  pull_image called");
+
         Self::set_proxy_env_vars();
         let cid = self.cid_from_request(req)?;
         let image = req.image();
