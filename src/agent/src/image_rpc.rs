@@ -82,6 +82,9 @@ impl ImageService {
 
     // pause image is packaged in rootfs for CC
     fn unpack_pause_image(cid: &str, target_subpath: &str) -> Result<String> {
+
+        info!(sl(), "KS-M4GIC: B3G1N: unpack_pause_image  called");
+
         let cc_pause_bundle = Path::new(KATA_CC_PAUSE_BUNDLE);
         if !cc_pause_bundle.exists() {
             return Err(anyhow!("Pause image not present in rootfs"));
@@ -202,14 +205,14 @@ impl ImageService {
 
     /// Pull image when creating container and return the bundle path with rootfs.
     pub async fn pull_image_for_container(
-
-        info!(sl(), "KS-M4GIC: B3G1N:  pull_image_for_container called");
-
         &self,
         image: &str,
         cid: &str,
         image_metadata: &HashMap<String, String>,
     ) -> Result<String> {
+
+        info!(sl(), "KS-M4GIC: B3G1N:  pull_image_for_container called");
+
         info!(sl(), "image metadata: {:?}", image_metadata);
         Self::set_proxy_env_vars();
         let is_sandbox = if let Some(value) = image_metadata.get("io.kubernetes.cri.container-type")
