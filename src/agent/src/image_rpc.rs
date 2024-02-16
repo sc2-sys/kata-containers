@@ -174,6 +174,7 @@ impl ImageService {
         source_creds: Option<&str>,
         cid: &str,
     ) -> Result<()> {
+        info!(sl(), "KS-MAGIC: B3G1N: common_image_pull called");
         let res = self
             .image_client
             .lock()
@@ -182,7 +183,7 @@ impl ImageService {
             .await;
         match res {
             Ok(image) => {
-                info!(sl(), "KS-M4GIC: B3G1N:  pull_image_for_container called");
+                info!(sl(), "KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image);
                 info!(
                     sl(),
                     "pull and unpack image {:?}, cid: {:?}, with image-rs succeed. ", image, cid
