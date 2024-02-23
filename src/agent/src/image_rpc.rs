@@ -187,7 +187,7 @@ impl ImageService {
         match res {
             Ok(image) => {
                 //info!(sl(), "KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image);
-                println!("KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image)
+                println!("KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image);
                 info!(
                     sl(),
                     "pull and unpack image {:?}, cid: {:?}, with image-rs succeed. ", image, cid
