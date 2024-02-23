@@ -83,7 +83,8 @@ impl ImageService {
     // pause image is packaged in rootfs for CC
     fn unpack_pause_image(cid: &str, target_subpath: &str) -> Result<String> {
 
-        info!(sl(), "KS-M4GIC: B3G1N: unpack_pause_image  called");
+        // info!(sl(), "KS-M4GIC: B3G1N: unpack_pause_image  called");
+        println!("KS-M4GIC: B3G1N: unpack_pause_image  called");
 
         let cc_pause_bundle = Path::new(KATA_CC_PAUSE_BUNDLE);
         if !cc_pause_bundle.exists() {
@@ -152,6 +153,7 @@ impl ImageService {
             !aa_kbc_params.is_empty()
         );
 
+
         self.image_client.lock().await.config.auth = !aa_kbc_params.is_empty();
         let decrypt_config = format!("provider:attestation-agent:{}", aa_kbc_params);
 
@@ -174,7 +176,8 @@ impl ImageService {
         source_creds: Option<&str>,
         cid: &str,
     ) -> Result<()> {
-        info!(sl(), "KS-MAGIC: B3G1N: common_image_pull called");
+        //info!(sl(), "KS-MAGIC: B3G1N: common_image_pull called");
+        println!("KS-MAGIC: B3G1N: common_image_pull called");
         let res = self
             .image_client
             .lock()
@@ -183,7 +186,8 @@ impl ImageService {
             .await;
         match res {
             Ok(image) => {
-                info!(sl(), "KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image);
+                //info!(sl(), "KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image);
+                println!("KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image)
                 info!(
                     sl(),
                     "pull and unpack image {:?}, cid: {:?}, with image-rs succeed. ", image, cid
@@ -212,7 +216,8 @@ impl ImageService {
         image_metadata: &HashMap<String, String>,
     ) -> Result<String> {
 
-        info!(sl(), "KS-M4GIC: B3G1N:  pull_image_for_container called");
+        //info!(sl(), "KS-M4GIC: B3G1N:  pull_image_for_container called");
+        println!("KS-M4GIC: B3G1N:  pull_image_for_container called");
 
         info!(sl(), "image metadata: {:?}", image_metadata);
         Self::set_proxy_env_vars();
@@ -234,7 +239,8 @@ impl ImageService {
         fs::create_dir_all(&bundle_path)?;
         info!(sl(), "pull image {:?}, bundle path {:?}", cid, bundle_path);
 
-        info!(sl(), "KS-M4GIC: B3G1N: GC Image Pull ({:?})", image);
+        //info!(sl(), "KS-M4GIC: B3G1N: GC Image Pull ({:?})", image);
+        println!("KS-M4GIC: B3G1N: GC Image Pull ({:?})", image);
 
         let decrypt_config = self.get_security_config().await?;
 
@@ -248,7 +254,8 @@ impl ImageService {
     /// Pull image when recieving the PullImageRequest and return the image digest.
     async fn pull_image(&self, req: &image::PullImageRequest) -> Result<String> {
 
-        info!(sl(), "KS-M4GIC: B3G1N:  pull_image called");
+        //info!(sl(), "KS-M4GIC: B3G1N:  pull_image called");
+        println!("KS-M4GIC: B3G1N:  pull_image called");
 
         Self::set_proxy_env_vars();
         let cid = self.cid_from_request(req)?;
