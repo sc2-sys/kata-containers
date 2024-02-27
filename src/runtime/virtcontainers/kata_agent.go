@@ -2508,12 +2508,17 @@ func (k *kataAgent) PullImage(ctx context.Context, req *image.PullImageReq) (*im
 	r := &grpc.PullImageRequest{
 		Image: req.Image,
 	}
+
+	k.Logger().Infof("KS: Kata Shim sending PullImageRequest to Agent")
+
 	resp, err := k.sendReq(ctx, r)
 	if err != nil {
 		k.Logger().Errorf("agent pull image err. %v", err)
 		return nil, err
 	}
 	response := resp.(*grpc.PullImageResponse)
+
+	k.Logger().Infof("KS: Kata Shim received respones to PullImage request, with ref: %v", response.ImageRef)
 	return &image.PullImageResp{
 		ImageRef: response.ImageRef,
 	}, nil

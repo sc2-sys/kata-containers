@@ -1747,6 +1747,7 @@ pub async fn start(
     let hservice = health_ttrpc::create_health(Arc::new(health_service));
 
     let image_service = image_rpc::ImageService::new();
+
     *image_rpc::IMAGE_SERVICE.lock().await = Some(image_service.clone());
     let image_service =
         Arc::new(Box::new(image_service) as Box<dyn image_ttrpc::Image + Send + Sync>);

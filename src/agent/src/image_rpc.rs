@@ -63,7 +63,8 @@ impl ImageService {
             image_client.config.file_paths.auth_file =
                 AGENT_CONFIG.image_registry_auth_file.clone();
         }
-
+        
+        println!("KS: ImageService::new() returning instantiated image service");
         Self {
             image_client: Arc::new(Mutex::new(image_client)),
             images: Arc::new(Mutex::new(HashMap::new())),
