@@ -1846,7 +1846,7 @@ func (k *kataAgent) handlePidNamespace(grpcSpec *grpc.Spec, sandbox *Sandbox) bo
 }
 
 func (k *kataAgent) startContainer(ctx context.Context, sandbox *Sandbox, c *Container) error {
-	span, ctx := katatrace.Trace(ctx, k.Logger(), "startContainer", kataAgentTracingTags)
+	span, ctx := katatrace.Trace(ctx, k.Logger(), "KS: startContainer from kata shim", kataAgentTracingTags)
 	defer span.End()
 
 	req := &grpc.StartContainerRequest{
