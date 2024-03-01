@@ -1373,7 +1373,7 @@ func (k *kataAgent) createContainer(ctx context.Context, sandbox *Sandbox, c *Co
 	if err != nil {
 		return nil, err
 	}
-
+	k.Logger().Info("KS-Shim: Making CreateContainerRequest")
 	req := &grpc.CreateContainerRequest{
 		ContainerId:  c.id,
 		ExecId:       c.id,
@@ -1386,6 +1386,7 @@ func (k *kataAgent) createContainer(ctx context.Context, sandbox *Sandbox, c *Co
 	if _, err = k.sendReq(ctx, req); err != nil {
 		return nil, err
 	}
+	k.Logger().Info("KS-Shim: Returning from createContainer")
 	return buildProcessFromExecID(req.ExecId)
 }
 
@@ -1846,7 +1847,7 @@ func (k *kataAgent) handlePidNamespace(grpcSpec *grpc.Spec, sandbox *Sandbox) bo
 }
 
 func (k *kataAgent) startContainer(ctx context.Context, sandbox *Sandbox, c *Container) error {
-	span, ctx := katatrace.Trace(ctx, k.Logger(), "KS: startContainer from kata shim", kataAgentTracingTags)
+	span, ctx := katatrace.Trace(ctx, k.Logger(), "startContainer", kataAgentTracingTags)
 	defer span.End()
 
 	req := &grpc.StartContainerRequest{
@@ -2509,7 +2510,7 @@ func (k *kataAgent) PullImage(ctx context.Context, req *image.PullImageReq) (*im
 		Image: req.Image,
 	}
 
-	k.Logger().Infof("KS: Kata Shim sending PullImageRequest to Agent")
+	k.Logger().Info("KS-Shim: Kata Shim sending PullImageRequest to Agent")
 
 	resp, err := k.sendReq(ctx, r)
 	if err != nil {
@@ -2518,7 +2519,7 @@ func (k *kataAgent) PullImage(ctx context.Context, req *image.PullImageReq) (*im
 	}
 	response := resp.(*grpc.PullImageResponse)
 
-	k.Logger().Infof("KS: Kata Shim received respones to PullImage request, with ref: %v", response.ImageRef)
+	k.Logger().Infof("KS-Shim: Kata Shim received respones to PullImage request, with ref: %v", response.ImageRef)
 	return &image.PullImageResp{
 		ImageRef: response.ImageRef,
 	}, nil
