@@ -2015,7 +2015,7 @@ dependencies = [
 [[package]]
 name = "image-rs"
 version = "0.1.0"
-source = "git+https://github.com/coco-serverless/guest-components?branch=KS-main#e849dc8921d2a48bec915f1a7c02f8988721022d"
+source = "git+https://github.com/coco-serverless/guest-components?branch=KS-main#a0bde8db934dbe0982575642de699bce58e22ff7"
 dependencies = [
  "anyhow",
  "async-compression",
