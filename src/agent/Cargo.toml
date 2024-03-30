@@ -74,7 +74,7 @@ clap = { version = "3.0.1", features = ["derive"] }
 openssl = { version = "0.10.38", features = ["vendored"] }
 
 # Image pull/decrypt
-image-rs = { git = "https://github.com/coco-serverless/guest-components", rev="294734a", default-features = false, features = [
+image-rs = { git = "https://github.com/coco-serverless/guest-components", rev="3889b10", default-features = false, features = [
     "kata-cc-native-tls",
     "verity",
     "signature-simple-xrss",
