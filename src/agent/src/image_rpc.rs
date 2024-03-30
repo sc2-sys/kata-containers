@@ -178,17 +178,19 @@ impl ImageService {
         cid: &str,
     ) -> Result<()> {
         //info!(sl(), "KS-MAGIC: B3G1N: common_image_pull called");
-        println!("KS-MAGIC: B3G1N: common_image_pull called");
+        println!("CSG-M4GIC: B3G1N: (KS-agent) GC Image Pull ({:?})", image);
         let res = self
             .image_client
             .lock()
             .await
             .pull_image(image, bundle_path, &source_creds, &Some(decrypt_config))
             .await;
+        println!("CSG-M4GIC: END: (KS-agent) GC Image Pull ({:?})", image);
+
         match res {
             Ok(image) => {
                 //info!(sl(), "KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image);
-                println!("KS-M4GIC: B3G1N:  image-rs client pulled image {:?}", image);
+                println!("CSG-M4GIC: B3G1N: (KS-agent) image-rs client pulled image {:?}", image);
                 info!(
                     sl(),
                     "pull and unpack image {:?}, cid: {:?}, with image-rs succeed. ", image, cid
@@ -218,7 +220,7 @@ impl ImageService {
     ) -> Result<String> {
 
         //info!(sl(), "KS-M4GIC: B3G1N:  pull_image_for_container called");
-        println!("KS-M4GIC: B3G1N:  pull_image_for_container called");
+        println!("CSG-M4GIC: (KS-agent) pull_image_for_container called");
 
         info!(sl(), "image metadata: {:?}", image_metadata);
         Self::set_proxy_env_vars();
@@ -241,7 +243,7 @@ impl ImageService {
         info!(sl(), "pull image {:?}, bundle path {:?}", cid, bundle_path);
 
         //info!(sl(), "KS-M4GIC: B3G1N: GC Image Pull ({:?})", image);
-        println!("KS-M4GIC: B3G1N: GC Image Pull ({:?})", image);
+        println!("CSG-M4GIC: (KS-agent) GC Image Pull ({:?})", image);
 
         let decrypt_config = self.get_security_config().await?;
 
@@ -256,7 +258,7 @@ impl ImageService {
     async fn pull_image(&self, req: &image::PullImageRequest) -> Result<String> {
 
         //info!(sl(), "KS-M4GIC: B3G1N:  pull_image called");
-        println!("KS-M4GIC: B3G1N:  pull_image called");
+        println!("CSG-M4GIC: (KS-agent) pull_image called");
 
         Self::set_proxy_env_vars();
         let cid = self.cid_from_request(req)?;
