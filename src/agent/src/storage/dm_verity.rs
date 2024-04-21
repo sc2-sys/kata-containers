@@ -84,7 +84,7 @@ impl StorageHandler for DmVerityHandler {
         mut storage: Storage,
         ctx: &mut StorageContext,
     ) -> Result<Arc<dyn StorageDevice>> {
-        println!("CSG-M4GIC: B3G1N: (KS-agent) DmVerityHandler create_device", image);
+        println!("CSG-M4GIC: B3G1N: (KS-agent) DmVerityHandler create_device");
         Self::update_source_device(&mut storage, ctx).await?;
         create_mount_destination(&storage.source, &storage.mount_point, "", &storage.fstype)
             .context("Could not create mountpoint")?;
