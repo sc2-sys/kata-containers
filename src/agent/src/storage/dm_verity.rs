@@ -103,7 +103,7 @@ impl StorageHandler for DmVerityHandler {
             verity_device_path: storage.source,
             logger: ctx.logger.clone(),
         });
-        println!("CSG-M4GIC: END: (KS-agent) DmVerityHandler create_device", image);
+        println!("CSG-M4GIC: END: (KS-agent) DmVerityHandler create_device");
         Ok(device)
     }
 }
