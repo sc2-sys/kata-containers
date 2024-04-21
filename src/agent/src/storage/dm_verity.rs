@@ -80,6 +80,7 @@ impl DmVerityHandler {
 impl StorageHandler for DmVerityHandler {
     #[instrument]
     async fn create_device(
+        println!("CSG-M4GIC: B3G1N: (KS-agent) DmVerityHandler create_device", image);
         &self,
         mut storage: Storage,
         ctx: &mut StorageContext,
@@ -91,16 +92,19 @@ impl StorageHandler for DmVerityHandler {
         let verity_info = Self::get_dm_verity_info(&storage)?;
         let verity_info = serde_json::to_string(&verity_info)
             .map_err(|e| anyhow!("failed to serialize dm_verity info, {}", e))?;
+        println!("CSG-M4GIC:(KS-agent) dm_verity info: {:?}", verity_info);
         let verity_device_path = create_dmverity_device(&verity_info, Path::new(storage.source()))
             .context("create device with dm-verity enabled")?;
         storage.source = verity_device_path;
         common_storage_handler(ctx.logger, &storage)?;
 
-        Ok(Arc::new(DmVerityDevice {
+        let device = Arc::new(DmVerityDevice {
             common: StorageDeviceGeneric::new(storage.mount_point),
             verity_device_path: storage.source,
             logger: ctx.logger.clone(),
-        }))
+        })
+        println!("CSG-M4GIC: END: (KS-agent) DmVerityHandler create_device", image);
+        Ok(device)
     }
 }
 
