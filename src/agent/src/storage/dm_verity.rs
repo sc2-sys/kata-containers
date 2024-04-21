@@ -102,7 +102,7 @@ impl StorageHandler for DmVerityHandler {
             common: StorageDeviceGeneric::new(storage.mount_point),
             verity_device_path: storage.source,
             logger: ctx.logger.clone(),
-        })
+        });
         println!("CSG-M4GIC: END: (KS-agent) DmVerityHandler create_device", image);
         Ok(device)
     }
