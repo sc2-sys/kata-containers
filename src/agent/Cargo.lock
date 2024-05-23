@@ -109,6 +109,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bddcadddf5e9015d310179a59bb28c4d4b9920ad0f11e8e14dbadf654890c9a6"
 
 [[package]]
+name = "arrayref"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b4930d2cb77ce62f89ee5d5289b4ac049559b1c45539271f5ed4fdc7db34545"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96d30a06541fbafbc7f82ed10c06164cfbd2c401138f6addd8404629c4b16711"
+
+[[package]]
 name = "ascii-canvas"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -150,8 +162,8 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "tokio",
- "zstd",
- "zstd-safe",
+ "zstd 0.12.3+zstd.1.5.2",
+ "zstd-safe 6.0.5+zstd.1.5.4",
 ]
 
 [[package]]
@@ -402,6 +414,19 @@ dependencies = [
  "radium",
  "tap",
  "wyz",
+]
+
+[[package]]
+name = "blake3"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30cca6d3674597c30ddf2c587bf8d9d65c9a84d2326d941cc79c9842dfe0ef52"
+dependencies = [
+ "arrayref",
+ "arrayvec",
+ "cc",
+ "cfg-if 1.0.0",
+ "constant_time_eq",
 ]
 
 [[package]]
@@ -727,6 +752,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmake"
+version = "0.1.50"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a31c789563b815f77f4250caee12365734369f942439b7defd71e18a48197130"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "codespan-reporting"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -798,6 +832,12 @@ dependencies = [
  "quote",
  "unicode-xid",
 ]
+
+[[package]]
+name = "constant_time_eq"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7144d30dcf0fafbce74250a3963025d8d52177934239851c917d29f1df280c2"
 
 [[package]]
 name = "core-foundation"
@@ -1559,6 +1599,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8a2db397cb1c8772f31494cb8917e48cd1e64f0fa7efac59fbd741a0a8ce841"
 dependencies = [
  "crc32fast",
+ "libz-sys",
  "miniz_oxide",
 ]
 
@@ -1597,6 +1638,25 @@ name = "funty"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fed34cd105917e91daa4da6b3728c47b068749d6a62c59811f06ed2ac71d9da7"
+
+[[package]]
+name = "fuse-backend-rs"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f85357722be4bf3d0b7548bedf7499686c77628c2c61cb99c6519463f7a9e5f0"
+dependencies = [
+ "arc-swap",
+ "bitflags",
+ "caps",
+ "core-foundation-sys",
+ "lazy_static",
+ "libc",
+ "log",
+ "mio",
+ "nix 0.24.3",
+ "vm-memory",
+ "vmm-sys-util",
+]
 
 [[package]]
 name = "futures"
@@ -2015,7 +2075,7 @@ dependencies = [
 [[package]]
 name = "image-rs"
 version = "0.1.0"
-source = "git+https://github.com/coco-serverless/guest-components?branch=KS-main#a0bde8db934dbe0982575642de699bce58e22ff7"
+source = "git+https://github.com/coco-serverless/guest-components?rev=fb8d452#fb8d4527562f53d290dda983549cebb94ea77049"
 dependencies = [
  "anyhow",
  "async-compression",
@@ -2032,6 +2092,8 @@ dependencies = [
  "log",
  "loopdev",
  "nix 0.26.2",
+ "nydus-api",
+ "nydus-service",
  "oci-distribution",
  "oci-spec",
  "ocicrypt-rs",
@@ -2051,7 +2113,7 @@ dependencies = [
  "ttrpc-codegen",
  "url",
  "walkdir",
- "zstd",
+ "zstd 0.12.3+zstd.1.5.2",
 ]
 
 [[package]]
@@ -2114,6 +2176,16 @@ dependencies = [
  "hermit-abi 0.3.1",
  "libc",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "io-uring"
+version = "0.5.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd1e1a01cfb924fd8c5c43b6827965db394f5a3a16c599ce03452266e1cf984c"
+dependencies = [
+ "bitflags",
+ "libc",
 ]
 
 [[package]]
@@ -2426,6 +2498,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a7cbbd4ad467251987c6e5b47d53b11a5a05add08f2447a9e2d70aef1e0d138"
 
 [[package]]
+name = "libz-sys"
+version = "1.1.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e143b5e666b2695d28f6bca6497720813f699c9602dd7f5cac91008b8ada7f9"
+dependencies = [
+ "cc",
+ "cmake",
+ "libc",
+ "pkg-config",
+ "vcpkg",
+]
+
+[[package]]
 name = "link-cplusplus"
 version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2488,6 +2573,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "lz4"
+version = "1.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e9e2dd86df36ce760a60f6ff6ad526f7ba1f14ba0356f8254fb6905e6494df1"
+dependencies = [
+ "libc",
+ "lz4-sys",
+]
+
+[[package]]
+name = "lz4-sys"
+version = "1.9.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57d27b317e207b10f69f5e75494119e391a96f48861ae870d1da6edac98ca900"
+dependencies = [
+ "cc",
+ "libc",
+]
+
+[[package]]
 name = "malloc_buf"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2530,6 +2635,15 @@ name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
+
+[[package]]
+name = "memmap2"
+version = "0.5.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83faa42c0a078c393f6b29d5db232d8be22776a891f8f56e5284faee4a20b327"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "memoffset"
@@ -2862,6 +2976,115 @@ dependencies = [
 ]
 
 [[package]]
+name = "nydus-api"
+version = "0.3.1"
+source = "git+https://github.com/konsougiou/nydus.git?rev=2dd5339#2dd53397b49ba986700be8e8cb5bfe488cfb6a9e"
+dependencies = [
+ "libc",
+ "log",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "nydus-rafs"
+version = "0.3.2"
+source = "git+https://github.com/konsougiou/nydus.git?rev=2dd5339#2dd53397b49ba986700be8e8cb5bfe488cfb6a9e"
+dependencies = [
+ "anyhow",
+ "arc-swap",
+ "bitflags",
+ "fuse-backend-rs",
+ "lazy_static",
+ "libc",
+ "log",
+ "nix 0.24.3",
+ "nydus-api",
+ "nydus-storage",
+ "nydus-utils",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "vm-memory",
+]
+
+[[package]]
+name = "nydus-service"
+version = "0.3.0"
+source = "git+https://github.com/konsougiou/nydus.git?rev=2dd5339#2dd53397b49ba986700be8e8cb5bfe488cfb6a9e"
+dependencies = [
+ "fuse-backend-rs",
+ "libc",
+ "log",
+ "mio",
+ "nix 0.24.3",
+ "nydus-api",
+ "nydus-rafs",
+ "nydus-storage",
+ "nydus-utils",
+ "rust-fsm",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "time 0.3.20",
+ "tokio",
+ "tokio-uring",
+]
+
+[[package]]
+name = "nydus-storage"
+version = "0.6.4"
+source = "git+https://github.com/konsougiou/nydus.git?rev=2dd5339#2dd53397b49ba986700be8e8cb5bfe488cfb6a9e"
+dependencies = [
+ "arc-swap",
+ "base64 0.21.2",
+ "bitflags",
+ "fuse-backend-rs",
+ "hex",
+ "lazy_static",
+ "libc",
+ "log",
+ "memmap2",
+ "nix 0.24.3",
+ "nydus-api",
+ "nydus-utils",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tar",
+ "tokio",
+ "url",
+ "vm-memory",
+]
+
+[[package]]
+name = "nydus-utils"
+version = "0.4.3"
+source = "git+https://github.com/konsougiou/nydus.git?rev=2dd5339#2dd53397b49ba986700be8e8cb5bfe488cfb6a9e"
+dependencies = [
+ "blake3",
+ "flate2",
+ "httpdate",
+ "lazy_static",
+ "libc",
+ "libz-sys",
+ "log",
+ "lz4",
+ "lz4-sys",
+ "nix 0.24.3",
+ "nydus-api",
+ "openssl",
+ "serde",
+ "serde_json",
+ "sha2 0.10.7",
+ "thiserror",
+ "tokio",
+ "zstd 0.11.2+zstd.1.5.2",
+]
+
+[[package]]
 name = "objc"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2921,7 +3144,7 @@ dependencies = [
 [[package]]
 name = "ocicrypt-rs"
 version = "0.1.0"
-source = "git+https://github.com/coco-serverless/guest-components?branch=KS-main#e849dc8921d2a48bec915f1a7c02f8988721022d"
+source = "git+https://github.com/coco-serverless/guest-components?rev=fb8d452#fb8d4527562f53d290dda983549cebb94ea77049"
 dependencies = [
  "aes 0.8.3",
  "anyhow",
@@ -4041,6 +4264,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-fsm"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "021d7de715253e45ad24a2fbb0725a0f7f271fd8d3163b130bd65ce2816a860d"
+dependencies = [
+ "rust-fsm-dsl",
+]
+
+[[package]]
+name = "rust-fsm-dsl"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a66b1273014079e4cf2b04aad1f3a2849e26e9a106f0411be2b1c15c23a791a"
+dependencies = [
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "rustc-hash"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4109,7 +4351,7 @@ dependencies = [
  "tempfile",
  "test-utils",
  "tokio",
- "xattr",
+ "xattr 0.2.3",
  "zbus",
 ]
 
@@ -4167,6 +4409,12 @@ checksum = "713cfb06c7059f3588fb8044c0fad1d09e3c01d225e25b9220dbfdcf16dbb1b3"
 dependencies = [
  "windows-sys 0.42.0",
 ]
+
+[[package]]
+name = "scoped-tls"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1cf6437eb19a8f4a6cc0f7dca544973b0b78843adbfeb3683d1a94a0024a294"
 
 [[package]]
 name = "scopeguard"
@@ -4831,13 +5079,13 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
 name = "tar"
-version = "0.4.38"
+version = "0.4.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b55807c0344e1e6c04d7c965f5289c39a8d94ae23ed5c0b57aabac549f871c6"
+checksum = "b16afcea1f22891c49a00c751c7b63b2233284064f11a200fc624137c51e2ddb"
 dependencies = [
  "filetime",
  "libc",
- "xattr",
+ "xattr 1.0.0",
 ]
 
 [[package]]
@@ -5028,6 +5276,20 @@ checksum = "397c988d37662c7dda6d2208364a706264bf3d6138b11d436cbac0ad38832842"
 dependencies = [
  "futures-core",
  "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-uring"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d5e02bb137e030b3a547c65a3bd2f1836d66a97369fdcc69034002b10e155ef"
+dependencies = [
+ "io-uring",
+ "libc",
+ "scoped-tls",
+ "slab",
+ "socket2",
  "tokio",
 ]
 
@@ -5398,6 +5660,26 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
+
+[[package]]
+name = "vm-memory"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "688a70366615b45575a424d9c665561c1b5ab2224d494f706b6a6812911a827c"
+dependencies = [
+ "libc",
+ "winapi",
+]
+
+[[package]]
+name = "vmm-sys-util"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48b7b084231214f7427041e4220d77dfe726897a6d41fddee450696e66ff2a29"
+dependencies = [
+ "bitflags",
+ "libc",
+]
 
 [[package]]
 name = "vsock"
@@ -5842,6 +6124,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "xattr"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea263437ca03c1522846a4ddafbca2542d0ad5ed9b784909d4b27b76f62bc34a"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "xdg-home"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5958,11 +6249,30 @@ dependencies = [
 
 [[package]]
 name = "zstd"
+version = "0.11.2+zstd.1.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20cc960326ece64f010d2d2107537f26dc589a6573a316bd5b1dba685fa5fde4"
+dependencies = [
+ "zstd-safe 5.0.2+zstd.1.5.2",
+]
+
+[[package]]
+name = "zstd"
 version = "0.12.3+zstd.1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76eea132fb024e0e13fd9c2f5d5d595d8a967aa72382ac2f9d39fcc95afd0806"
 dependencies = [
- "zstd-safe",
+ "zstd-safe 6.0.5+zstd.1.5.4",
+]
+
+[[package]]
+name = "zstd-safe"
+version = "5.0.2+zstd.1.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d2a5585e04f9eea4b2a3d1eca508c4dee9592a89ef6f450c11719da0726f4db"
+dependencies = [
+ "libc",
+ "zstd-sys",
 ]
 
 [[package]]

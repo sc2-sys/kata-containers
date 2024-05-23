@@ -15,6 +15,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+    "encoding/json"
 
 	"github.com/kata-containers/kata-containers/src/runtime/pkg/device/config"
 	"github.com/kata-containers/kata-containers/src/runtime/pkg/device/manager"
@@ -766,6 +767,14 @@ func newContainer(ctx context.Context, sandbox *Sandbox, contConfig *ContainerCo
 		return nil, err
 	}
 
+    contJson, err := json.Marshal(c)
+    if err != nil {
+        c.Logger().Infof("KS-Shim: Error marshalling to JSON: %v", err)
+
+    }
+    c.Logger().Infof("KS-Shim: Returning new container: %v", contJson)
+    //c.Logger().Infof("KS-Shim: Returning new container: %v", c)
+
 	return c, nil
 }
 
@@ -815,6 +824,7 @@ func (c *Container) createVirtualVolumeDevices() ([]config.DeviceInfo, error) {
 			if err != nil {
 				return nil, err
 			}
+            c.Logger().Infof("KS-Shim: Creating virtVolume device with virtVolume: %v", virtVolume)
 			if virtVolume.VolumeType == types.KataVirtualVolumeImageRawBlockType || virtVolume.VolumeType == types.KataVirtualVolumeLayerRawBlockType {
 				di, err := c.createDeviceInfo(virtVolume.Source, virtVolume.Source, true, true)
 				if err != nil {

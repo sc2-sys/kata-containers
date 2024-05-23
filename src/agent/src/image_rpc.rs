@@ -63,7 +63,7 @@ impl ImageService {
             image_client.config.file_paths.auth_file =
                 AGENT_CONFIG.image_registry_auth_file.clone();
         }
-        
+
         println!("KS: ImageService::new() returning instantiated image service");
         Self {
             image_client: Arc::new(Mutex::new(image_client)),
@@ -294,6 +294,7 @@ impl ImageService {
 
     // When being passed an image name through a container annotation, merge its
     // corresponding bundle OCI specification into the passed container creation one.
+    #[allow(dead_code)]
     pub async fn merge_bundle_oci(&self, container_oci: &mut oci::Spec) -> Result<()> {
         if let Some(image_name) = container_oci
             .annotations
@@ -342,6 +343,7 @@ impl ImageService {
     }
 
     // Partially merge an OCI process specification into another one.
+    #[allow(dead_code)]
     fn merge_oci_process(&self, target: &mut oci::Process, source: &oci::Process) {
         if target.args.is_empty() && !source.args.is_empty() {
             target.args.append(&mut source.args.clone());

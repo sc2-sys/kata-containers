@@ -11,6 +11,8 @@ use tokio::sync::Mutex;
 use std::ffi::CString;
 use std::io;
 use std::path::Path;
+use std::str;
+
 use std::sync::Arc;
 use ttrpc::{
     self,
@@ -180,6 +182,29 @@ impl AgentService {
 
         kata_sys_util::validate::verify_id(&cid)?;
 
+    let cmd = format!("ls /run/kata-containers/{}/rootfs", cid);
+    let _output = Command::new("sh")
+    .arg("-c")
+    .arg(cmd.clone())
+    .output()
+    .expect("KS (agent-start-create) Failed to execute 'ls' command");
+
+//    if output.status.success() {
+//        let stdout = str::from_utf8(&output.stdout)
+//            .unwrap_or("KS (agent-start-create) Failed to decode stdout as UTF-8");
+//
+    //    for line in stdout.split('\n') {
+    //        println!("KS (agent-start-create) blob_cache file: {}", line);
+    //    }
+    //} else {
+    //    let stderr = str::from_utf8(&output.stderr)
+    //        .unwrap_or("KS Failed to decode stderr as UTF-8");
+    //    eprintln!("KS (agent-start-create) Failed to execute '{}': {}", cmd, stderr);
+    //}
+
+
+
+
         let mut oci_spec = req.OCI.clone();
         let use_sandbox_pidns = req.sandbox_pidns();
 
@@ -262,7 +287,84 @@ impl AgentService {
         // After all those storages have been processed, no matter the order
         // here, the agent will rely on rustjail (using the oci.Mounts
         // list) to bind mount all of them inside the container.
-        let m = add_storages(sl(), req.storages, &self.sandbox, Some(req.container_id)).await?;
+        //
+
+        ////// PATCH ///////
+
+        let rootfs_path = format!("/run/kata-containers/{}/rootfs", cid);
+
+        let cache_path = format!("/run/kata-containers/blob_cache");
+        let path = Path::new(&cache_path);
+        fs::create_dir_all(path)?;
+
+        Command::new("cp")
+        .args(&["-a", &format!("{}/.", rootfs_path), &cache_path])
+        .status()?;
+
+
+
+ //   let cmd = format!("ls /run/kata-containers/");
+ // let cmd = format!("ls /run/kata-containers/blob_cache");
+  //  let output = Command::new("sh")
+  //  .arg("-c")
+  //  .arg(cmd.clone())
+  //  .output()
+  //  .expect("KS (agent-before-strgs) Failed to execute 'ls' command");
+
+  //  if output.status.success() {
+  //      let stdout = str::from_utf8(&output.stdout)
+  //          .unwrap_or("KS (agent-before-strgs) Failed to decode stdout as UTF-8");
+//
+  //      for line in stdout.split('\n') {
+    //        println!("KS (agent-before-strgs) blob_cache root entry: {}", line);
+  //      }
+    //} else {
+     //   let stderr = str::from_utf8(&output.stderr)
+     //       .unwrap_or("KS Failed to decode stderr as UTF-8");
+      //  eprintln!("KS (agent-before-strgs) Failed to execute '{}': {}", cmd, stderr);
+   // }
+
+
+        let storages = req.storages.iter().map(|storage| {
+            let mut storage = storage.clone(); // Clone the storage to modify it
+            if storage.driver == "overlayfs" {
+            // Set a new mount point that is not the rootfs
+                storage.mount_point = format!("/run/kata-containers/blob_cache");
+            }
+            storage
+        }).collect::<Vec<_>>();
+
+        info!(
+            sl(),
+            "Adjusted storages with custom mount points: {:?}", &storages
+        );
+
+        ////// PATCH //////
+
+        let m = add_storages(sl(), storages, &self.sandbox, Some(req.container_id)).await?;
+
+            //let cmd = format!("ls /run/kata-containers/{}/rootfs", cid);
+    //let cmd = format!("ls /run/kata-containers/blob_cache/cache");
+    //let output = Command::new("sh")
+    //.arg("-c")
+    //.arg(cmd.clone())
+    //.output()
+    //.expect("KS (agent-after-strgs) Failed to execute 'ls' command");
+
+   // if output.status.success() {
+  //      let stdout = str::from_utf8(&output.stdout)
+ //           .unwrap_or("KS (agent-after-strgs) Failed to decode stdout as UTF-8");
+//
+    //    for line in stdout.split('\n') {
+   //         println!("KS (agent-after-strgs) blob_cache entry: {}", line);
+   //     }
+   // } else {
+   //     let stderr = str::from_utf8(&output.stderr)
+   //         .unwrap_or("KS Failed to decode stderr as UTF-8");
+   //     eprintln!("KS (agent-after-strgs) Failed to execute '{}': {}", cmd, stderr);
+   //}
+
+
 
         let mut s = self.sandbox.lock().await;
         s.container_mounts.insert(cid.clone(), m);
@@ -341,6 +443,29 @@ impl AgentService {
         s.update_shared_pidns(&ctr)?;
         s.add_container(ctr);
         info!(sl(), "created container!");
+
+
+    //Checking if blob cache populated
+    let cmd = "ls /run/kata-containers/blob_cache/cache";
+    //let cmd = format!("ls /run/kata-containers/{}/rootfs", cid);
+    let output = Command::new("sh")
+    .arg("-c")
+    .arg(cmd)
+    .output()
+    .expect("KS (agent) Failed to execute 'ls' command");
+
+    if output.status.success() {
+        let stdout = str::from_utf8(&output.stdout)
+            .unwrap_or("KS (agent) Failed to decode stdout as UTF-8");
+
+        for line in stdout.split('\n') {
+            println!("KS (agent) blob_cache file: {}", line);
+        }
+    } else {
+        let stderr = str::from_utf8(&output.stderr)
+            .unwrap_or("KS Failed to decode stderr as UTF-8");
+        eprintln!("KS (agent) Failed to execute '{}': {}", cmd, stderr);
+    }
 
         Ok(())
     }

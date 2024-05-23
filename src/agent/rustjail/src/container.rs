@@ -898,6 +898,10 @@ impl BaseContainer for LinuxContainer {
         let logger = self.logger.new(o!("eid" => p.exec_id.clone()));
         let tty = p.tty;
         let fifo_file = format!("{}/{}", &self.root, EXEC_FIFO_FILENAME);
+
+
+        println!("KS-agent: fifo file ins start {:?}", fifo_file);
+
         info!(logger, "enter container.start!");
         let mut fifofd: RawFd = -1;
         if p.init {
@@ -989,6 +993,7 @@ impl BaseContainer for LinuxContainer {
         });
 
         let exec_path = std::env::current_exe()?;
+        println!("KS-agent: fifo file ins start {:?}", exec_path);
         let mut child = std::process::Command::new(exec_path);
 
         #[allow(unused_mut)]
