@@ -67,7 +67,7 @@ var vci vc.VC = &vc.VCImpl{}
 // shimLog is logger for shim package
 var shimLog = logrus.WithFields(logrus.Fields{
 	"source": "containerd-kata-shim-v2",
-	"name":   "containerd-shim-v2",
+	"name":   "containerd-shim-v2-aa",
 })
 
 // New returns a new shim service that can be used via GRPC
