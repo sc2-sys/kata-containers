@@ -143,6 +143,7 @@ fn announce(logger: &Logger, config: &AgentConfig) {
     "agent-version" =>  version::AGENT_VERSION,
     "api-version" => version::API_VERSION,
     "config" => format!("{:?}", config),
+    "fyp-ashvin" => "true",
     );
 }
 

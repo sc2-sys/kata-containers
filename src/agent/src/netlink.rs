@@ -14,6 +14,9 @@ use std::fmt;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::ops::Deref;
 use std::str::{self, FromStr};
+use slog::{Logger, info};
+use std::fs;
+use std::path::Path;
 
 /// Search criteria to use when looking for a link in `find_link`.
 pub enum LinkFilter<'a> {
@@ -60,77 +63,97 @@ impl Handle {
         Ok(Handle { handle })
     }
 
-    pub async fn update_interface(&mut self, iface: &Interface) -> Result<()> {
-        // The reliable way to find link is using hardware address
-        // as filter. However, hardware filter might not be supported
-        // by netlink, we may have to dump link list and then find the
-        // target link. filter using name or family is supported, but
-        // we cannot use that to find target link.
-        // let's try if hardware address filter works. -_-
-        let link = self.find_link(LinkFilter::Address(&iface.hwAddr)).await?;
+    pub async fn update_interface(&mut self, iface: &Interface, logger: Logger) -> Result<()> {
+        // Log entry into the function
+        info!(logger, "Starting update_interface for interface"; "interface" => format!("{:?}", iface));
 
-        // Bring down interface if it is UP
-        if link.is_up() {
-            self.enable_link(link.index(), false).await?;
+        // Log all available links
+        info!(logger, "Fetching all available links");
+        let all_links = self.list_links().await?;
+        for link in &all_links {
+            info!(logger, "Available link"; "link" => format!("{:?}", link));
         }
 
-        // Delete all addresses associated with the link
-        let addresses = self
-            .list_addresses(AddressFilter::LinkIndex(link.index()))
-            .await?;
-        self.delete_addresses(addresses).await?;
-
-        // Add new ip addresses from request
-        for ip_address in &iface.IPAddresses {
-            let ip = IpAddr::from_str(ip_address.address())?;
-            let mask = ip_address.mask().parse::<u8>()?;
-
-            self.add_addresses(link.index(), std::iter::once(IpNetwork::new(ip, mask)?))
-                .await?;
+        // Log all available PCI devices
+        info!(logger, "Fetching all available PCI devices");
+        let all_pci_devices = Self::list_pci_devices().await?;
+        for device in &all_pci_devices {
+            info!(logger, "Available PCI device"; "device" => format!("{:?}", device));
         }
 
-        // we need to update the link's interface name, thus we should rename the existed link whose name
-        // is the same with the link's request name, otherwise, it would update the link failed with the
-        // name conflicted.
-        let mut new_link = None;
-        if link.name() != iface.name {
-            if let Ok(link) = self.find_link(LinkFilter::Name(iface.name.as_str())).await {
-                // update the existing interface name with a temporary name, otherwise
-                // it would failed to udpate this interface with an existing name.
+        // Check network device initialization
+        info!(logger, "Checking if network device is initialized");
+        let network_initialized = Self::check_network_device_initialized(&iface.hwAddr).await?;
+        info!(logger, "Network device initialization status"; "initialized" => network_initialized);
+
+
+        // Try to find the link by hardware address
+        info!(logger, "Attempting to find link with hardware address"; "hwAddr" => &iface.hwAddr);
+        match self.find_link(LinkFilter::Address(&iface.hwAddr)).await {
+            Ok(link) => {
+                info!(logger, "Link found"; "link" => format!("{:?}", link));
+
+                // Bring down interface if it is UP
+                if link.is_up() {
+                    info!(logger, "Bringing down the link"; "index" => link.index());
+                    self.enable_link(link.index(), false).await?;
+                }
+
+                // Delete all addresses associated with the link
+                info!(logger, "Listing addresses for link index"; "index" => link.index());
+                let addresses = self.list_addresses(AddressFilter::LinkIndex(link.index())).await?;
+                info!(logger, "Deleting addresses"; "addresses" => format!("{:?}", addresses));
+                self.delete_addresses(addresses).await?;
+
+                // Add new IP addresses from request
+                for ip_address in &iface.IPAddresses {
+                    let ip = IpAddr::from_str(ip_address.address())?;
+                    let mask = ip_address.mask().parse::<u8>()?;
+                    info!(logger, "Adding address"; "ip" => ip.to_string(), "mask" => mask);
+                    self.add_addresses(link.index(), std::iter::once(IpNetwork::new(ip, mask)?)).await?;
+                }
+
+                // Handle interface renaming if necessary
+                let mut new_link = None;
+                if link.name() != iface.name {
+                    info!(logger, "Interface name needs to be updated"; "old_name" => link.name(), "new_name" => &iface.name);
+                    if let Ok(existing_link) = self.find_link(LinkFilter::Name(iface.name.as_str())).await {
+                        info!(logger, "Renaming existing link to temporary name"; "existing_link_name" => existing_link.name());
+                        let mut request = self.handle.link().set(existing_link.index());
+                        request.message_mut().header = existing_link.header.clone();
+                        request.name(format!("{}_temp", existing_link.name())).up().execute().await?;
+                        new_link = Some(existing_link);
+                    }
+                }
+
+                // Update link with new properties
+                info!(logger, "Updating link properties"; "index" => link.index());
                 let mut request = self.handle.link().set(link.index());
                 request.message_mut().header = link.header.clone();
-
                 request
-                    .name(format!("{}_temp", link.name()))
+                    .mtu(iface.mtu as _)
+                    .name(iface.name.clone())
+                    .arp(iface.raw_flags & libc::IFF_NOARP as u32 == 0)
                     .up()
                     .execute()
                     .await?;
 
-                new_link = Some(link);
+                // Swap the updated interface's name if necessary
+                if let Some(nlink) = new_link {
+                    info!(logger, "Swapping back the updated interface name"; "index" => nlink.index());
+                    let mut request = self.handle.link().set(nlink.index());
+                    request.message_mut().header = nlink.header.clone();
+                    request.name(link.name()).up().execute().await?;
+                }
+
+                info!(logger, "update_interface completed successfully"; "interface" => format!("{:?}", iface));
+                Ok(())
+            }
+            Err(e) => {
+                error!(logger, "Failed to find link with hardware address"; "hwAddr" => &iface.hwAddr, "error" => format!("{:?}", e));
+                Err(e)
             }
         }
-
-        // Update link
-        let mut request = self.handle.link().set(link.index());
-        request.message_mut().header = link.header.clone();
-
-        request
-            .mtu(iface.mtu as _)
-            .name(iface.name.clone())
-            .arp(iface.raw_flags & libc::IFF_NOARP as u32 == 0)
-            .up()
-            .execute()
-            .await?;
-
-        // swap the updated iface's name.
-        if let Some(nlink) = new_link {
-            let mut request = self.handle.link().set(nlink.index());
-            request.message_mut().header = nlink.header.clone();
-
-            request.name(link.name()).up().execute().await?;
-        }
-
-        Ok(())
     }
 
     pub async fn handle_localhost(&self) -> Result<()> {
@@ -613,6 +636,43 @@ impl Handle {
 
         Ok(())
     }
+
+    async fn list_pci_devices() -> Result<Vec<PciDevice>, std::io::Error> {
+        let mut devices = Vec::new();
+        let pci_path = Path::new("/sys/bus/pci/devices");
+        for entry in fs::read_dir(pci_path)? {
+            let entry = entry?;
+            let device_path = entry.path();
+
+            let address = entry.file_name().into_string().unwrap();
+            let vendor = fs::read_to_string(device_path.join("vendor"))?;
+            let device = fs::read_to_string(device_path.join("device"))?;
+
+            devices.push(PciDevice {
+                address,
+                vendor: vendor.trim().to_string(),
+                device: device.trim().to_string(),
+            });
+        }
+        Ok(devices)
+    }
+
+    async fn check_network_device_initialized(hw_addr: &str) -> Result<bool, std::io::Error> {
+        let net_path = Path::new("/sys/class/net");
+        for entry in fs::read_dir(net_path)? {
+            let entry = entry?;
+            let device_path = entry.path();
+            let address_path = device_path.join("address");
+
+            if address_path.exists() {
+                let address = fs::read_to_string(address_path)?;
+                if address.trim().eq_ignore_ascii_case(hw_addr) {
+                    return Ok(true);
+                }
+            }
+        }
+        Ok(false)
+    }
 }
 
 fn format_address(data: &[u8]) -> Result<String> {
@@ -665,6 +725,7 @@ fn parse_mac_address(addr: &str) -> Result<[u8; 6]> {
 }
 
 /// Wraps external type with the local one, so we can implement various extensions and type conversions.
+#[derive(Debug)]
 struct Link(packet::LinkMessage);
 
 impl Link {
@@ -733,6 +794,7 @@ impl Deref for Link {
     }
 }
 
+#[derive(Debug)]
 struct Address(packet::AddressMessage);
 
 impl TryFrom<Address> for IPAddress {
@@ -801,6 +863,15 @@ impl Address {
             .unwrap_or_default()
     }
 }
+
+#[derive(Debug)]
+#[allow(dead_code)]
+struct PciDevice {
+    address: String,
+    vendor: String,
+    device: String,
+}
+
 
 #[cfg(test)]
 mod tests {

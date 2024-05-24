@@ -993,11 +993,12 @@ impl agent_ttrpc::AgentService for AgentService {
             )
         })?;
 
+        let logger = self.sandbox.lock().await.logger.clone();
         self.sandbox
             .lock()
             .await
             .rtnl
-            .update_interface(&interface)
+            .update_interface(&interface, logger)
             .await
             .map_err(|e| {
                 ttrpc_error(ttrpc::Code::INTERNAL, format!("update interface: {:?}", e))
