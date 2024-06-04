@@ -2002,7 +2002,7 @@ func (q *qemu) hotplugNetDevice(ctx context.Context, endpoint Endpoint, op Opera
 			devNoHotplug := fmt.Sprintf("fe.%x.%x", bridge.Addr, addr)
 			return q.qmpMonitorCh.qmp.ExecuteNetCCWDeviceAdd(q.qmpMonitorCh.ctx, tap.Name, devID, endpoint.HardwareAddr(), devNoHotplug, int(q.config.NumVCPUs))
 		}
-		return q.qmpMonitorCh.qmp.ExecuteNetPCIDeviceAdd(q.qmpMonitorCh.ctx, tap.Name, devID, endpoint.HardwareAddr(), addr, bridge.ID, romFile, int(q.config.NumVCPUs), defaultDisableModern)
+		return q.qmpMonitorCh.qmp.ExecuteNetPCIDeviceAdd(q.qmpMonitorCh.ctx, tap.Name, devID, endpoint.HardwareAddr(), addr, bridge.ID, romFile, int(q.config.NumVCPUs), defaultDisableModern, true)
 
 	}
 
@@ -2539,8 +2539,8 @@ func genericAppendBridges(devices []govmmQemu.Device, bridges []types.Bridge, ma
 				// the BIOS would use with SHPC) so
 				// that we can do ACPI hotplug.
 				IOReserve:     "4k",
-				MemReserve:    "1m",
-				Pref64Reserve: "1m",
+				MemReserve:    "4m",
+				Pref64Reserve: "4m",
 			},
 		)
 	}

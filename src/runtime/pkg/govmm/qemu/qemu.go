@@ -568,10 +568,10 @@ func (fsdev FSDevice) QemuParams(config *Config) []string {
 	if fsdev.Transport.isVirtioPCI(config) && fsdev.ROMFile != "" {
 		deviceParams = append(deviceParams, fmt.Sprintf("romfile=%s", fsdev.ROMFile))
 	}
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
 	if fsdev.Transport.isVirtioCCW(config) {
-		if config.Knobs.IOMMUPlatform {
-			deviceParams = append(deviceParams, "iommu_platform=on")
-		}
 		deviceParams = append(deviceParams, fmt.Sprintf("devno=%s", fsdev.DevNo))
 	}
 
@@ -706,10 +706,10 @@ func (cdev CharDevice) QemuParams(config *Config) []string {
 		deviceParams = append(deviceParams, fmt.Sprintf("romfile=%s", cdev.ROMFile))
 	}
 
+    if cdev.Driver == VirtioSerial && config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
 	if cdev.Driver == VirtioSerial && cdev.Transport.isVirtioCCW(config) {
-		if config.Knobs.IOMMUPlatform {
-			deviceParams = append(deviceParams, "iommu_platform=on")
-		}
 		deviceParams = append(deviceParams, fmt.Sprintf("devno=%s", cdev.DevNo))
 	}
 
@@ -980,10 +980,11 @@ func (netdev NetDevice) QemuDeviceParams(config *Config) []string {
 		deviceParams = append(deviceParams, fmt.Sprintf("romfile=%s", netdev.ROMFile))
 	}
 
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
+
 	if netdev.Transport.isVirtioCCW(config) {
-		if config.Knobs.IOMMUPlatform {
-			deviceParams = append(deviceParams, "iommu_platform=on")
-		}
 		deviceParams = append(deviceParams, fmt.Sprintf("devno=%s", netdev.DevNo))
 	}
 
@@ -1154,10 +1155,11 @@ func (dev SerialDevice) QemuParams(config *Config) []string {
 		}
 	}
 
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
+
 	if dev.Transport.isVirtioCCW(config) {
-		if config.Knobs.IOMMUPlatform {
-			deviceParams = append(deviceParams, "iommu_platform=on")
-		}
 		deviceParams = append(deviceParams, fmt.Sprintf("devno=%s", dev.DevNo))
 	}
 
@@ -1281,6 +1283,10 @@ func (blkdev BlockDevice) QemuParams(config *Config) []string {
 	if !blkdev.WCE {
 		deviceParams = append(deviceParams, "config-wce=off")
 	}
+
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
 
 	if blkdev.Transport.isVirtioPCI(config) && blkdev.ROMFile != "" {
 		deviceParams = append(deviceParams, fmt.Sprintf("romfile=%s", blkdev.ROMFile))
@@ -1571,10 +1577,10 @@ func (vhostuserDev VhostUserDevice) QemuFSParams(config *Config) []string {
 	if vhostuserDev.SharedVersions {
 		deviceParams = append(deviceParams, "versiontable=/dev/shm/fuse_shared_versions")
 	}
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
 	if vhostuserDev.Transport.isVirtioCCW(config) {
-		if config.Knobs.IOMMUPlatform {
-			deviceParams = append(deviceParams, "iommu_platform=on")
-		}
 		deviceParams = append(deviceParams, fmt.Sprintf("devno=%s", vhostuserDev.DevNo))
 	}
 	if vhostuserDev.Transport.isVirtioPCI(config) && vhostuserDev.ROMFile != "" {
@@ -1999,10 +2005,10 @@ func (scsiCon SCSIController) QemuParams(config *Config) []string {
 		deviceParams = append(deviceParams, fmt.Sprintf("romfile=%s", scsiCon.ROMFile))
 	}
 
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
 	if scsiCon.Transport.isVirtioCCW(config) {
-		if config.Knobs.IOMMUPlatform {
-			deviceParams = append(deviceParams, "iommu_platform=on")
-		}
 		deviceParams = append(deviceParams, fmt.Sprintf("devno=%s", scsiCon.DevNo))
 	}
 
@@ -2205,10 +2211,11 @@ func (vsock VSOCKDevice) QemuParams(config *Config) []string {
 		deviceParams = append(deviceParams, fmt.Sprintf("romfile=%s", vsock.ROMFile))
 	}
 
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
+
 	if vsock.Transport.isVirtioCCW(config) {
-		if config.Knobs.IOMMUPlatform {
-			deviceParams = append(deviceParams, "iommu_platform=on")
-		}
 		deviceParams = append(deviceParams, fmt.Sprintf("devno=%s", vsock.DevNo))
 	}
 
@@ -2278,11 +2285,10 @@ func (v RngDevice) QemuParams(config *Config) []string {
 	if v.Transport.isVirtioPCI(config) && v.ROMFile != "" {
 		deviceParams = append(deviceParams, fmt.Sprintf("romfile=%s", v.ROMFile))
 	}
-
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
 	if v.Transport.isVirtioCCW(config) {
-		if config.Knobs.IOMMUPlatform {
-			deviceParams = append(deviceParams, "iommu_platform=on")
-		}
 		deviceParams = append(deviceParams, fmt.Sprintf("devno=%s", v.DevNo))
 	}
 
@@ -2352,6 +2358,10 @@ func (b BalloonDevice) QemuParams(config *Config) []string {
 	if b.ID != "" {
 		deviceParams = append(deviceParams, "id="+b.ID)
 	}
+
+    if config.Knobs.IOMMUPlatform {
+        deviceParams = append(deviceParams, "iommu_platform=on")
+    }
 
 	if b.Transport.isVirtioPCI(config) && b.ROMFile != "" {
 		deviceParams = append(deviceParams, fmt.Sprintf("romfile=%s", b.ROMFile))
@@ -2906,7 +2916,7 @@ func (config *Config) appendDevices(logger QMPLog) {
 			logger.Errorf("vm device is not valid: %+v", d)
 			continue
 		}
-		config.qemuParams = append(config.qemuParams, d.QemuParams(config)...)
+        config.qemuParams = append(config.qemuParams, d.QemuParams(config)...)
 	}
 }
 

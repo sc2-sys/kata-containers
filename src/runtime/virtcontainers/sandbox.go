@@ -23,6 +23,8 @@ import (
 	"sync"
 	"syscall"
 
+    "time"
+
 	v1 "github.com/containerd/cgroups/stats/v1"
 	v2 "github.com/containerd/cgroups/v2/stats"
 	cri "github.com/containerd/containerd/pkg/cri/annotations"
@@ -1368,18 +1370,6 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 		}
 	}
 
-	// 1. Do not scan the netns if we want no network for the vmm.
-	// 2. In case of vm factory, scan the netns to hotplug interfaces after vm is started.
-	// 3. In case of prestartHookFunc, network config might have been changed. We need to
-	//    rescan and handle the change.
-	if !s.config.NetworkConfig.DisableNewNetwork && (s.factory != nil || prestartHookFunc != nil) {
-		if _, err := s.network.AddEndpoints(ctx, s, nil, true); err != nil {
-			return err
-		}
-	}
-
-	s.Logger().Info("VM started")
-
 	if s.cw != nil {
 		s.Logger().Debug("console watcher starts")
 		if err := s.cw.start(s); err != nil {
@@ -1387,6 +1377,22 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 			return err
 		}
 	}
+
+
+	// 1. Do not scan the netns if we want no network for the vmm.
+	// 2. In case of vm factory, scan the netns to hotplug interfaces after vm is started.
+	// 3. In case of prestartHookFunc, network config might have been changed. We need to
+	//    rescan and handle the change.
+	if !s.config.NetworkConfig.DisableNewNetwork && (s.factory != nil || prestartHookFunc != nil) {
+        s.Logger().Debug("ABOUT TO ADD ENDPOINTS")
+		if _, err := s.network.AddEndpoints(ctx, s, nil, true); err != nil {
+			return err
+		}
+	}
+
+	s.Logger().Info("VM started")
+    s.Logger().Debug("WAITING WAITING WAITING")
+    time.Sleep(5 * time.Minute)
 
 	// Once the hypervisor is done starting the sandbox,
 	// we want to guarantee that it is manageable.

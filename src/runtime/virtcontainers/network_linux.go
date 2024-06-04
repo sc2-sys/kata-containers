@@ -349,10 +349,12 @@ func (n *LinuxNetwork) AddEndpoints(ctx context.Context, s *Sandbox, endpointsIn
 	defer span.End()
 
 	if endpointsInfo == nil {
+        networkLogger().Debug("endpointsInfo is nil, adding all endpoints")
 		if err := n.addAllEndpoints(ctx, s, hotplug); err != nil {
 			return nil, err
 		}
 	} else {
+        networkLogger().Debug("endpointsInfo is not nil, adding those endpoints")
 		for _, ep := range endpointsInfo {
 			if err := doNetNS(n.netNSPath, func(_ ns.NetNS) error {
 				if _, err := n.addSingleEndpoint(ctx, s, ep, hotplug); err != nil {

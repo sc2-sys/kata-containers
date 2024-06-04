@@ -671,7 +671,18 @@ func (q *QMP) executeCommandWithResponse(ctx context.Context, name string, args 
 func (q *QMP) executeCommand(ctx context.Context, name string, args map[string]interface{},
 	filter *qmpEventFilter) error {
 
-	_, err := q.executeCommandWithResponse(ctx, name, args, nil, filter)
+    jsonArgs, err := json.Marshal(args)
+    if err == nil {
+        jsonArgsString := string(jsonArgs)
+        q.cfg.Logger.Infof("Executing QMP Command - name: %s, args: %s", name, jsonArgsString)
+    } else {
+        q.cfg.Logger.Infof("Executing QMP Command - name: %s - couldn't marshall json args - error: %s", name, err)
+    }
+
+	result, err := q.executeCommandWithResponse(ctx, name, args, nil, filter)
+
+    q.cfg.Logger.Infof("Executed QMP Command - error: %s, result: %s", err, result)
+
 	return err
 }
 
@@ -1036,7 +1047,7 @@ func (q *QMP) ExecuteNetdevDel(ctx context.Context, netdevID string) error {
 // disableModern indicates if virtio version 1.0 should be replaced by the
 // former version 0.9, as there is a KVM bug that occurs when using virtio
 // 1.0 in nested environments.
-func (q *QMP) ExecuteNetPCIDeviceAdd(ctx context.Context, netdevID, devID, macAddr, addr, bus, romfile string, queues int, disableModern bool) error {
+func (q *QMP) ExecuteNetPCIDeviceAdd(ctx context.Context, netdevID, devID, macAddr, addr, bus, romfile string, queues int, disableModern bool, enableIOMMU bool) error {
 	args := map[string]interface{}{
 		"id":      devID,
 		"driver":  VirtioNetPCI,
@@ -1055,9 +1066,11 @@ func (q *QMP) ExecuteNetPCIDeviceAdd(ctx context.Context, netdevID, devID, macAd
 	if netdevID != "" {
 		args["netdev"] = netdevID
 	}
-	if disableModern {
-		args["disable-modern"] = disableModern
-	}
+    if enableIOMMU {
+        args["iommu_platform"] = enableIOMMU
+    }
+	args["disable-modern"] = disableModern
+	args["disable-legacy"] = true
 
 	if queues > 0 {
 		// (2N+2 vectors, N for tx queues, N for rx queues, 1 for config, and one for possible control vq)
