@@ -108,6 +108,14 @@ func (endpoint *VethEndpoint) Attach(ctx context.Context, s *Sandbox) error {
 	return h.AddDevice(ctx, endpoint, NetDev)
 }
 
+func (endpoint *VethEndpoint) PartialAttach(ctx context.Context, h Hypervisor) error {
+    if err := xConnectConfidentialVMForCache(ctx, endpoint, h); err != nil {
+		networkLogger().WithError(err).Error("Error partial bridging virtual endpoint for cached confidential VM")
+		return err
+	}
+	return h.AddDevice(ctx, endpoint, NetDev)
+}
+
 // Detach for the veth endpoint tears down the tap and bridge
 // created for the veth interface.
 func (endpoint *VethEndpoint) Detach(ctx context.Context, netNsCreated bool, netNsPath string) error {

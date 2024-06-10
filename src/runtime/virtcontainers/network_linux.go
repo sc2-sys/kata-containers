@@ -407,6 +407,46 @@ func (n *LinuxNetwork) RemoveEndpoints(ctx context.Context, s *Sandbox, endpoint
 	return nil
 }
 
+func (n *LinuxNetwork) AddEndpointForCachedSEV(ctx context.Context, h Hypervisor, vmCacheNamespace string) (Endpoint, error) {
+    n.netNSPath = vmCacheNamespace
+    networkLogger().WithField("namespace", n.netNSPath).Infof("Creating VM cache namespace")
+    nsHandle, err := netns.NewNamed(n.netNSPath)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create namespace: %w", err)
+    }
+    n.netNSCreated = true
+    defer nsHandle.Close()
+
+    endpoint, err := createVethNetworkEndpoint(0, "eth0", NetXConnectTCFilterModel)
+    if err != nil {
+        return nil, err
+    }
+
+    // Skip setting endpoint properties here because we don't use it
+    endpoint.PartialAttach(ctx, h)
+
+	if !h.IsRateLimiterBuiltin() {
+		rxRateLimiterMaxRate := h.HypervisorConfig().RxRateLimiterMaxRate
+		if rxRateLimiterMaxRate > 0 {
+			networkLogger().Info("Add Rx Rate Limiter")
+			if err := addRxRateLimiter(endpoint, rxRateLimiterMaxRate); err != nil {
+				return nil, err
+			}
+		}
+		txRateLimiterMaxRate := h.HypervisorConfig().TxRateLimiterMaxRate
+		if txRateLimiterMaxRate > 0 {
+			networkLogger().Info("Add Tx Rate Limiter")
+			if err := addTxRateLimiter(endpoint, txRateLimiterMaxRate); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+
+	n.eps = append(n.eps, endpoint)
+	return endpoint, nil
+}
+
 // Network getters
 func (n *LinuxNetwork) NetworkID() string {
 	return n.netNSPath
@@ -423,6 +463,7 @@ func (n *LinuxNetwork) Endpoints() []Endpoint {
 func (n *LinuxNetwork) SetEndpoints(endpoints []Endpoint) {
 	n.eps = endpoints
 }
+
 
 func createLink(netHandle *netlink.Handle, name string, expectedLink netlink.Link, queues int) (netlink.Link, []*os.File, error) {
 	var newLink netlink.Link
@@ -568,6 +609,12 @@ func xConnectVMNetwork(ctx context.Context, endpoint Endpoint, h Hypervisor) err
 		err = fmt.Errorf("Invalid internetworking model")
 	}
 	return err
+}
+
+func xConnectConfidentialVMForCache(ctx context.Context, endpoint Endpoint, h Hypervisor) error {
+    queues := int(h.HypervisorConfig().NumVCPUs)
+	disableVhostNet := h.HypervisorConfig().DisableVhostNet
+    return setupTAPIfaceForCachedSEV(ctx, endpoint, queues, disableVhostNet)
 }
 
 // The endpoint type should dictate how the disconnection needs to happen.
@@ -838,6 +885,41 @@ func setupTCFiltering(ctx context.Context, endpoint Endpoint, queues int, disabl
 	if err := addRedirectTCFilter(tapAttrs.Index, attrs.Index); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func setupTAPIfaceForCachedSEV(ctx context.Context, endpoint Endpoint, queues int, disableVhostNet bool) error {
+	netHandle, err := netlink.NewHandle()
+	if err != nil {
+		return err
+	}
+	defer netHandle.Close()
+
+	netPair := endpoint.NetworkPair()
+
+	tapLink, fds, err := createLink(netHandle, netPair.TAPIface.Name, &netlink.Tuntap{}, queues)
+	if err != nil {
+		return fmt.Errorf("Could not create TAP interface: %s", err)
+	}
+	netPair.VMFds = fds
+
+	if !disableVhostNet {
+		vhostFds, err := createVhostFds(queues)
+		if err != nil {
+			return fmt.Errorf("Could not setup vhost fds %s : %s", netPair.VirtIface.Name, err)
+		}
+		netPair.VhostFds = vhostFds
+	}
+
+	if err := netHandle.LinkSetUp(tapLink); err != nil {
+		return fmt.Errorf("Could not enable TAP %s: %s", netPair.TAPIface.Name, err)
+	}
+
+    netPair.TAPIface.HardAddr, err = generateRandomPrivateMacAddr()
+    if err != nil {
+        return err
+    }
 
 	return nil
 }
@@ -1451,3 +1533,4 @@ func validGuestNeighbor(neigh netlink.Neigh) bool {
 	// We add only static ARP entries
 	return neigh.State == netlink.NUD_PERMANENT
 }
+

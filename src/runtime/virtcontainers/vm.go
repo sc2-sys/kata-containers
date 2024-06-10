@@ -8,6 +8,7 @@ package virtcontainers
 import (
 	"context"
 	"encoding/json"
+    "fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -126,6 +127,13 @@ func NewVM(ctx context.Context, config VMConfig) (*VM, error) {
 		return nil, err
 	}
 
+    // partial attach endpoint for cached SEV VM
+    if inFactory, ok := ctx.Value("vm-cache").(bool); ok && inFactory &&
+    config.HypervisorConfig.ConfidentialGuest {
+        virtLog.WithField("vm", id).Info("Adding partial endpoint for cached SEV guest")
+        network.AddEndpointForCachedSEV(ctx, hypervisor, buildVMCacheNetNSPath(id))
+    }
+
 	// 2. setup agent
 	newAagentFunc := getNewAgentFunc(ctx)
 	agent := newAagentFunc()
@@ -228,6 +236,10 @@ func NewVMFromGrpc(ctx context.Context, v *pb.GrpcVM, config VMConfig) (*VM, err
 
 func buildVMSharePath(id string, vmStoragePath string) string {
 	return filepath.Join(vmStoragePath, id, "shared")
+}
+
+func buildVMCacheNetNSPath(vmId string) string {
+    return fmt.Sprintf("vm-cache-%s", vmId)
 }
 
 func (v *VM) logger() logrus.FieldLogger {

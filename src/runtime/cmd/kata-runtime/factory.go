@@ -172,6 +172,7 @@ var initFactoryCommand = cli.Command{
 		}
 
 		if runtimeConfig.FactoryConfig.VMCacheNumber > 0 {
+            ctx = context.WithValue(ctx, "vm-cache", true)
 			f, err := vf.NewFactory(ctx, factoryConfig, false)
 			if err != nil {
 				return err
