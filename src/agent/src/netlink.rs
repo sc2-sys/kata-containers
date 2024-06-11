@@ -67,7 +67,28 @@ impl Handle {
         // target link. filter using name or family is supported, but
         // we cannot use that to find target link.
         // let's try if hardware address filter works. -_-
-        let link = self.find_link(LinkFilter::Address(&iface.hwAddr)).await?;
+        let link = match self.find_link(LinkFilter::Address(&iface.hwAddr)).await {
+            Ok(link) => link,
+            Err(_) => {
+                // in the VM Cached SEV case, the endpoint is started with a hardware address
+                // different from the endpoint, so we change the hardware address based on
+                // the name.
+                use packet::nlas::link::Nla;
+                let link = self.find_link(LinkFilter::Name(&iface.name)).await?;
+                let mac_addr: Vec<_> = parse_mac_address(&iface.hwAddr)?.try_into()?;
+
+                let mut request = self.handle.link().set(link.index());
+                request
+                    .message_mut()
+                    .nlas
+                    .push(Nla::Address(mac_addr));
+                request.execute()
+                    .await
+                    .map_err(|err| anyhow!("Failed to update hardware address: {:?}", err))?;
+
+                link
+            }
+        };
 
         // Bring down interface if it is UP
         if link.is_up() {
