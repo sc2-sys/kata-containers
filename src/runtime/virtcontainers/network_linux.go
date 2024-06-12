@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"sort"
 	"time"
+    "path/filepath"
 
 	"github.com/containernetworking/plugins/pkg/ns"
 	"github.com/vishvananda/netlink"
@@ -445,6 +446,25 @@ func (n *LinuxNetwork) AddEndpointForCachedSEV(ctx context.Context, h Hypervisor
 
 	n.eps = append(n.eps, endpoint)
 	return endpoint, nil
+}
+
+func (n *LinuxNetwork) MirrorEndpointForCachedSEV(ctx context.Context, s *Sandbox) error {
+    scriptDir := "/home/ashvina/Projects/scripts"
+    scriptPath := filepath.Join(scriptDir, "mirror_traffic.py")
+
+    vmCacheNs := fmt.Sprintf("vm-cache-%s", s.config.HypervisorConfig.VMid)
+    cmd := exec.Command("sudo", "python", scriptPath, "tap0_kata", vmCacheNs, "eth0", n.netNSPath)
+
+    err := cmd.Start()
+    if err != nil {
+        networkLogger().Errorf("Mirror daemon couldn't start for %s", s.id)
+        return err
+    }
+
+    networkLogger().WithField("pid", cmd.Process.Pid) .Infof("Mirror daemon started between namespaces %s and %s", vmCacheNs, n.netNSPath)
+
+
+    return nil
 }
 
 // Network getters

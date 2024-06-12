@@ -1373,9 +1373,15 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 	// 3. In case of prestartHookFunc, network config might have been changed. We need to
 	//    rescan and handle the change.
 	if !s.config.NetworkConfig.DisableNewNetwork && (s.factory != nil || prestartHookFunc != nil) {
-		if _, err := s.network.AddEndpoints(ctx, s, nil, true); err != nil {
-			return err
-		}
+        if s.config.HypervisorConfig.ConfidentialGuest && s.factory != nil {
+            if err := s.network.MirrorEndpointForCachedSEV(ctx, s); err != nil {
+                return err
+            }
+        } else {
+            if _, err := s.network.AddEndpoints(ctx, s, nil, true); err != nil {
+                return err
+            }
+        }
 	}
 
 	s.Logger().Info("VM started")

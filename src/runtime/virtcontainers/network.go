@@ -227,9 +227,8 @@ type Network interface {
 	// SetEndpoints sets a sandbox's network endpoints.
 	SetEndpoints([]Endpoint)
 
-    // AddEndpointForCachedSEV partially adds the endpoint, so we can boot the
-    // SEV VM
     AddEndpointForCachedSEV(context.Context, Hypervisor, string) (Endpoint, error)
+    MirrorEndpointForCachedSEV(context.Context, *Sandbox) error
 }
 
 func generateVCNetworkStructures(ctx context.Context, network Network) ([]*pbTypes.Interface, []*pbTypes.Route, []*pbTypes.ARPNeighbor, error) {
