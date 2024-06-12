@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"runtime"
 	"sort"
+    "sync"
 	"time"
     "path/filepath"
 
@@ -409,12 +410,12 @@ func (n *LinuxNetwork) RemoveEndpoints(ctx context.Context, s *Sandbox, endpoint
 }
 
 func (n *LinuxNetwork) AddEndpointForCachedSEV(ctx context.Context, h Hypervisor, vmCacheNamespace string) (Endpoint, error) {
-    n.netNSPath = vmCacheNamespace
     networkLogger().WithField("namespace", n.netNSPath).Infof("Creating VM cache namespace")
-    nsHandle, err := netns.NewNamed(n.netNSPath)
+    nsHandle, err := netns.NewNamed(vmCacheNamespace)
     if err != nil {
         return nil, fmt.Errorf("failed to create namespace: %w", err)
     }
+    n.netNSPath = filepath.Join("/var/run/netns", vmCacheNamespace)
     n.netNSCreated = true
     defer nsHandle.Close()
 
@@ -449,22 +450,31 @@ func (n *LinuxNetwork) AddEndpointForCachedSEV(ctx context.Context, h Hypervisor
 }
 
 func (n *LinuxNetwork) MirrorEndpointForCachedSEV(ctx context.Context, s *Sandbox) error {
-    scriptDir := "/home/ashvina/Projects/scripts"
-    scriptPath := filepath.Join(scriptDir, "mirror_traffic.py")
+    vmCacheNS := fmt.Sprintf("vm-cache-%s", s.config.HypervisorConfig.VMid)
+    vmCacheNSPath := filepath.Join("/var/run/netns", vmCacheNS)
 
-    vmCacheNs := fmt.Sprintf("vm-cache-%s", s.config.HypervisorConfig.VMid)
-    cmd := exec.Command("sudo", "python", scriptPath, "tap0_kata", vmCacheNs, "eth0", n.netNSPath)
+	tapIface := "tap0_kata"
+	ethIface := "eth0"
 
-    err := cmd.Start()
-    if err != nil {
-        networkLogger().Errorf("Mirror daemon couldn't start for %s", s.id)
-        return err
-    }
+	mrc := NewMirrorRoutineController()
+    forwardedPackets := sync.Map{}
 
-    networkLogger().WithField("pid", cmd.Process.Pid) .Infof("Mirror daemon started between namespaces %s and %s", vmCacheNs, n.netNSPath)
+	// Start goroutines for bidirectional traffic forwarding
+	for _, config := range []struct {
+		inIface, outIface, inNs, outNs string
+	}{
+		{tapIface, ethIface, vmCacheNSPath, n.netNSPath},
+		{ethIface, tapIface, n.netNSPath, vmCacheNSPath},
+	} {
+		stopCh := make(chan struct{})
+		mrc.AddStopChannel(stopCh)
+		mrc.wg.Add(1)
+		go CaptureAndForward(config.inIface, config.outIface, config.inNs, config.outNs, stopCh, &mrc.wg, &forwardedPackets)
+	}
 
+	networkLogger().Infof("Mirror daemon started between namespaces %s and %s", vmCacheNSPath, n.netNSPath)
 
-    return nil
+	return nil
 }
 
 // Network getters
@@ -1136,6 +1146,9 @@ func removeTCFiltering(ctx context.Context, endpoint Endpoint) error {
 	return nil
 }
 
+// doNetNS is free from any call to a go routine, and it calls
+// into runtime.LockOSThread(), meaning it won't be executed in a
+// different thread than the one expected by the caller.
 // doNetNS is free from any call to a go routine, and it calls
 // into runtime.LockOSThread(), meaning it won't be executed in a
 // different thread than the one expected by the caller.
