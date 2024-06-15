@@ -1381,6 +1381,7 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
             if _, err := s.network.AddEndpoints(ctx, s, nil, true); err != nil {
                 return err
             }
+            s.Logger().WithField("cni-ns", s.network.NetworkID()).Debug("cni namespace path")
         }
 	}
 

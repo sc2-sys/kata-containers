@@ -49,6 +49,8 @@ fn do_setup_guest_dns(logger: Logger, dns_list: &[String], src: &str, dst: &str)
         return Ok(());
     }
 
+    info!(logger, "Setting up guest DNS");
+
     let attr = fs::metadata(dst);
     if attr.is_err() {
         // not exists or other errors that we could not use it anymore.
@@ -65,6 +67,8 @@ fn do_setup_guest_dns(logger: Logger, dns_list: &[String], src: &str, dst: &str)
         .map(|x| x.trim())
         .collect::<Vec<&str>>()
         .join("\n");
+
+    info!(logger, "{}",  content);
 
     // make sure the src file's parent path exist.
     let file_path = path::Path::new(src);

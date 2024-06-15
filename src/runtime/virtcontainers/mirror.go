@@ -1,7 +1,6 @@
 package virtcontainers
 
 import (
-    "time"
     "net"
 	"fmt"
 	"sync"
@@ -14,25 +13,21 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-// MirrorRoutineController manages the lifecycle of the mirroring goroutines.
 type MirrorRoutineController struct {
 	stopChs []chan struct{}
 	wg      sync.WaitGroup
 }
 
-// NewMirrorRoutineController creates a new instance of MirrorRoutineController.
 func NewMirrorRoutineController() *MirrorRoutineController {
 	return &MirrorRoutineController{
 		stopChs: make([]chan struct{}, 0),
 	}
 }
 
-// AddStopChannel adds a stop channel to the controller.
 func (mrc *MirrorRoutineController) AddStopChannel(stopCh chan struct{}) {
 	mrc.stopChs = append(mrc.stopChs, stopCh)
 }
 
-// Stop stops all running goroutines managed by the controller.
 func (mrc *MirrorRoutineController) Stop() {
 	for _, ch := range mrc.stopChs {
 		close(ch)
@@ -43,13 +38,11 @@ func (mrc *MirrorRoutineController) Stop() {
 func getPacketID(pkt gopacket.Packet) string {
 	hash := sha256.New()
 
-	// Extract key attributes from the packet
 	var srcIP, dstIP string
 	var srcPort, dstPort uint16
 	var protocol string
 	var uniqueID string
 
-	// Extract IP layer
 	if ipLayer := pkt.Layer(layers.LayerTypeIPv4); ipLayer != nil {
 		ip, _ := ipLayer.(*layers.IPv4)
 		srcIP = ip.SrcIP.String()
@@ -63,7 +56,6 @@ func getPacketID(pkt gopacket.Packet) string {
 		protocol = ip.NextHeader.String()
 	}
 
-	// Extract transport layer
 	if tcpLayer := pkt.Layer(layers.LayerTypeTCP); tcpLayer != nil {
 		tcp, _ := tcpLayer.(*layers.TCP)
 		srcPort = uint16(tcp.SrcPort)
@@ -75,14 +67,12 @@ func getPacketID(pkt gopacket.Packet) string {
 		dstPort = uint16(udp.DstPort)
 	}
 
-	// Combine key attributes to form a unique identifier
 	idString := fmt.Sprintf("%s-%s-%d-%d-%s-%s", srcIP, dstIP, srcPort, dstPort, protocol, uniqueID)
 	hash.Write([]byte(idString))
 	hash.Write(pkt.Data())
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-// logPacket logs the packet details using networkLogger.
 func logPacket(packet gopacket.Packet) string {
 	networkLayer := packet.NetworkLayer()
 	if networkLayer == nil {
@@ -144,7 +134,6 @@ func ForwardPacket(packet gopacket.Packet, pktID string, outIface string, outNam
 // CaptureAndForward captures packets from the input interface and forwards them to the output interface.
 func CaptureAndForward(inIface string, outIface string, inNamespace string, outNamespace string, stopCh <-chan struct{}, wg *sync.WaitGroup, forwardedPackets *sync.Map) {
 	defer wg.Done()
-    time.Sleep(2)
 	networkLogger().Infof("Starting CaptureAndForward for %s -> %s", inIface, outIface)
 	err := doNetNS(inNamespace, func(_ ns.NetNS) error {
 		handle, err := pcap.OpenLive(inIface, 65535, true, pcap.BlockForever)
@@ -174,4 +163,3 @@ func CaptureAndForward(inIface string, outIface string, inNamespace string, outN
 		networkLogger().Errorf("Error in CaptureAndForward for %s -> %s: %v", inIface, outIface, err)
 	}
 }
-

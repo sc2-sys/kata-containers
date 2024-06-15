@@ -775,6 +775,7 @@ func (k *kataAgent) startSandbox(ctx context.Context, sandbox *Sandbox) error {
 		if err = k.updateInterfaces(ctx, interfaces); err != nil {
 			return err
 		}
+        k.Logger().Info("update interface request sent")
 		if _, err = k.updateRoutes(ctx, routes); err != nil {
 			return err
 		}
@@ -798,6 +799,7 @@ func (k *kataAgent) startSandbox(ctx context.Context, sandbox *Sandbox) error {
 	}
 
 	_, err = k.sendReq(ctx, req)
+    k.Logger().Info("create sandbox request sent")
 	if err != nil {
 		return err
 	}

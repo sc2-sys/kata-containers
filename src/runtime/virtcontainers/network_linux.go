@@ -453,18 +453,146 @@ func (n *LinuxNetwork) MirrorEndpointForCachedSEV(ctx context.Context, s *Sandbo
     vmCacheNS := fmt.Sprintf("vm-cache-%s", s.config.HypervisorConfig.VMid)
     vmCacheNSPath := filepath.Join("/var/run/netns", vmCacheNS)
 
-	tapIface := "tap0_kata"
-	ethIface := "eth0"
+    networkLogger().WithField("vm-cache-ns", vmCacheNSPath).Debug("vm cache ns path")
+    networkLogger().WithField("cni-ns", n.netNSPath).Debug("cni ns path")
+
+    ethIface := "eth0"
+    existingTapIface := "tap0_kata"
+    newTapIface := "eth0"
+
+    var originalEthLink netlink.Link
+    var originalAddrs []netlink.Addr
+    var originalRoutes []netlink.Route
+
+    err := doNetNS(n.netNSPath, func(_ ns.NetNS) error {
+        networkLogger().Debug("entered cni namespace for retrieving details")
+        var err error
+        netHandle, err := netlink.NewHandle()
+        if err != nil {
+            return err
+        }
+        defer netHandle.Close()
+
+        originalEthLink, err = netHandle.LinkByName(ethIface)
+        if err != nil {
+            return err
+        }
+        networkLogger().Debug("got link to eth0")
+
+        originalAddrs, err = netHandle.AddrList(originalEthLink, netlink.FAMILY_ALL)
+        if err != nil {
+            return err
+        }
+        networkLogger().Debug("got ip addrs of eth0")
+
+        originalRoutes, err = netHandle.RouteList(originalEthLink, netlink.FAMILY_ALL)
+        if err != nil {
+            return err
+        }
+        networkLogger().Debug("got route list of eth0")
+
+        return nil
+    })
+
+    if err != nil {
+        networkLogger().Debug("failed to get details from cni namespace")
+        return fmt.Errorf("failed to get details from original namespace: %w", err)
+    } else {
+        networkLogger().Debug("retrieved eth0 details from cni namespace")
+    }
+
+    err = doNetNS(vmCacheNSPath, func(_ ns.NetNS) error {
+        networkLogger().Debug("entered VM cache namespace")
+        netHandle, err := netlink.NewHandle()
+        if err != nil {
+            return err
+        }
+        defer netHandle.Close()
+
+        tapLink := &netlink.Tuntap{
+            LinkAttrs: netlink.LinkAttrs{
+                Name: newTapIface,
+            },
+            Mode: netlink.TUNTAP_MODE_TAP,
+        }
+        if err := netHandle.LinkAdd(tapLink); err != nil {
+            return fmt.Errorf("failed to create tap interface: %w", err)
+        }
+        networkLogger().Debug("created TAP interface in vm cache namespace")
+
+        if err := netHandle.LinkSetHardwareAddr(tapLink, originalEthLink.Attrs().HardwareAddr); err != nil {
+            networkLogger().Debug("failed to set MAC address: %w", err)
+            return fmt.Errorf("failed to set MAC address: %w", err)
+        }
+        networkLogger().Debug("set MAC address for new TAP in VM cache namespace")
+
+        for _, addr := range originalAddrs {
+            if err := netHandle.AddrAdd(tapLink, &addr); err != nil {
+                networkLogger().Debug("failed to IP address: %w", err)
+                return fmt.Errorf("failed to add IP address: %w", err)
+            }
+        }
+        networkLogger().Debug("set IP addresses for new TAP in VM cache namespace")
+
+        if err := netHandle.LinkSetUp(tapLink); err != nil {
+            networkLogger().Debug("failed to bringe up tap interface: %w", err)
+            return fmt.Errorf("failed to bring up tap interface: %w", err)
+        }
+        networkLogger().Debug("bring up new TAP interface")
+
+        for _, route := range originalRoutes {
+            route.LinkIndex = tapLink.Attrs().Index
+            if err := netHandle.RouteAdd(&route); err != nil {
+                networkLogger().Debugf("failed to add route: %w", err)
+            }
+        }
+
+        existingTapLink, err := netHandle.LinkByName(existingTapIface)
+        if err != nil {
+            return err
+        }
+        networkLogger().Debug("found tap0_kata in VM cache namespace")
+        tapAttrs := existingTapLink.Attrs()
+        newTapAttrs := tapLink.Attrs()
+
+
+        if err := addQdiscIngress(tapAttrs.Index); err != nil {
+            return err
+        }
+
+        if err := addQdiscIngress(newTapAttrs.Index); err != nil {
+            return err
+        }
+
+        if err := addRedirectTCFilter(newTapAttrs.Index, tapAttrs.Index); err != nil {
+            return err
+        }
+
+        if err := addRedirectTCFilter(tapAttrs.Index, newTapAttrs.Index); err != nil {
+            return err
+        }
+
+        if err := netHandle.LinkSetUp(tapLink); err != nil {
+            networkLogger().Debug("failed to bringe up tap interface: %w", err)
+            return fmt.Errorf("failed to bring up tap interface: %w", err)
+        }
+        networkLogger().Debug("bring up new TAP interface")
+
+        return nil
+    })
+    if err != nil {
+        return fmt.Errorf("failed to configure new TAP links within the VM cache namespac: %s", err)
+    }
+
 
 	mrc := NewMirrorRoutineController()
     forwardedPackets := sync.Map{}
 
-	// Start goroutines for bidirectional traffic forwarding
 	for _, config := range []struct {
 		inIface, outIface, inNs, outNs string
 	}{
-		{tapIface, ethIface, vmCacheNSPath, n.netNSPath},
-		{ethIface, tapIface, n.netNSPath, vmCacheNSPath},
+		{newTapIface, ethIface, vmCacheNSPath, n.netNSPath},
+		{ethIface, newTapIface, n.netNSPath, vmCacheNSPath},
 	} {
 		stopCh := make(chan struct{})
 		mrc.AddStopChannel(stopCh)
@@ -477,7 +605,6 @@ func (n *LinuxNetwork) MirrorEndpointForCachedSEV(ctx context.Context, s *Sandbo
 	return nil
 }
 
-// Network getters
 func (n *LinuxNetwork) NetworkID() string {
 	return n.netNSPath
 }
