@@ -899,7 +899,6 @@ impl BaseContainer for LinuxContainer {
         let tty = p.tty;
         let fifo_file = format!("{}/{}", &self.root, EXEC_FIFO_FILENAME);
 
-        println!("KS-agent: fifo file ins start {:?}", fifo_file);
         info!(logger, "enter container.start!");
         let mut fifofd: RawFd = -1;
         if p.init {

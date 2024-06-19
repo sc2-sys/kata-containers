@@ -5,6 +5,8 @@
 
 use std::path::Path;
 use std::sync::Arc;
+use std::str;
+use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
 use image_rs::verity::{create_dmverity_device, destroy_dmverity_device};
@@ -103,7 +105,28 @@ impl StorageHandler for DmVerityHandler {
             verity_device_path: storage.source,
             logger: ctx.logger.clone(),
         });
-        println!("CSG-M4GIC: END: (KS-agent) DmVerityHandler create_device");
+            let cmd = "ls /run/kata-containers/blob_cache";
+
+    let output = Command::new("sh")
+    .arg("-c")
+    .arg(cmd)
+    .output()
+    .expect("KS (agent-handler) Failed to execute 'ls' command");
+
+    if output.status.success() {
+        let stdout = str::from_utf8(&output.stdout)
+            .unwrap_or("KS (agent-handler) Failed to decode stdout as UTF-8");
+
+        for line in stdout.split('\n') {
+            println!("KS (agent-handler) blob_cahce file: {}", line);
+        }
+    } else {
+        let stderr = str::from_utf8(&output.stderr)
+            .unwrap_or("KS Failed to decode stderr as UTF-8");
+        eprintln!("KS (agent-handler) Failed to execute '{}': {}", cmd, stderr);
+    }
+
+        println!("CSG-M4GIC: END: (KS-agent-handler) DmVerityHandler create_device");
         Ok(device)
     }
 }

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+    "encoding/json"
 
 	"github.com/kata-containers/kata-containers/src/runtime/pkg/device/config"
 	"github.com/kata-containers/kata-containers/src/runtime/pkg/device/manager"
@@ -817,6 +818,7 @@ func (c *Container) createVirtualVolumeDevices() ([]config.DeviceInfo, error) {
 			if err != nil {
 				return nil, err
 			}
+            c.Logger().Infof("KS-Shim: Creating virtVolume device with virtVolume: %v", virtVolume)
 			if virtVolume.VolumeType == types.KataVirtualVolumeImageRawBlockType || virtVolume.VolumeType == types.KataVirtualVolumeLayerRawBlockType {
 				di, err := c.createDeviceInfo(virtVolume.Source, virtVolume.Source, true, true)
 				if err != nil {
