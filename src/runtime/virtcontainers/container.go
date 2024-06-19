@@ -766,6 +766,8 @@ func newContainer(ctx context.Context, sandbox *Sandbox, contConfig *ContainerCo
 		return nil, err
 	}
 
+	
+
 	return c, nil
 }
 
