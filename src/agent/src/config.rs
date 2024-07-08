@@ -52,6 +52,7 @@ const ERR_INVALID_CONTAINER_PIPE_SIZE_PARAM: &str = "unable to parse container p
 const ERR_INVALID_CONTAINER_PIPE_SIZE_KEY: &str = "invalid container pipe size key name";
 const ERR_INVALID_CONTAINER_PIPE_NEGATIVE: &str = "container pipe size should not be negative";
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct AgentConfig {
     pub debug_console: bool,
