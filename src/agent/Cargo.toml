@@ -78,7 +78,7 @@ strum = "0.26.2"
 strum_macros = "0.26.2"
 
 # Image pull/decrypt
-image-rs = { git = "https://github.com/confidential-containers/guest-components", rev = "v0.10.0", default-features = false, optional = true }
+image-rs = { git = "https://github.com/sc2-sys/guest-components", rev = "v0.10.0", default-features = false, optional = true }
 
 # Agent Policy
 regorus = { version = "0.2.6", default-features = false, features = [
@@ -108,7 +108,7 @@ default-pull = ["guest-pull"]
 seccomp = ["rustjail/seccomp"]
 standard-oci-runtime = ["rustjail/standard-oci-runtime"]
 agent-policy = ["regorus"]
-guest-pull = ["image-rs/kata-cc-rustls-tls"]
+guest-pull = ["image-rs/kata-cc-native-tls"]
 
 [[bin]]
 name = "kata-agent"
