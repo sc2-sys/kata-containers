@@ -104,7 +104,7 @@ default-pull = ["guest-pull"]
 seccomp = ["rustjail/seccomp"]
 standard-oci-runtime = ["rustjail/standard-oci-runtime"]
 agent-policy = [ "kata-agent-policy" ]
-guest-pull = ["image-rs/kata-cc-rustls-tls"]
+guest-pull = ["image-rs/kata-cc-native-tls"]
 
 [[bin]]
 name = "kata-agent"
