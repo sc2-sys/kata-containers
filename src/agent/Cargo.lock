@@ -461,7 +461,11 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 [[package]]
 name = "attester"
 version = "0.1.0"
+<<<<<<< HEAD
 source = "git+https://github.com/sc2-sys/guest-components?branch=sc2-main#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+=======
+source = "git+https://github.com/sc2-sys/guest-components?rev=v0.10.0#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1312,7 +1316,11 @@ checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 [[package]]
 name = "crypto"
 version = "0.1.0"
+<<<<<<< HEAD
 source = "git+https://github.com/sc2-sys/guest-components?branch=sc2-main#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+=======
+source = "git+https://github.com/sc2-sys/guest-components?rev=v0.10.0#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2544,6 +2552,7 @@ dependencies = [
 
 [[package]]
 name = "hyper-tls"
+<<<<<<< HEAD
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6183ddfa99b85da61a140bea0efc93fdf56ceaa041b37d553518030827f9905"
@@ -2568,6 +2577,19 @@ dependencies = [
  "native-tls",
  "tokio",
  "tokio-native-tls",
+=======
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70206fc6890eaca9fde8a0bf71caa2ddfc9fe045ac9e5c70df101a7dbde866e0"
+dependencies = [
+ "bytes 1.6.1",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "native-tls",
+ "tokio",
+ "tokio-native-tls",
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
  "tower-service",
 ]
 
@@ -2782,7 +2804,11 @@ dependencies = [
 [[package]]
 name = "image-rs"
 version = "0.1.0"
+<<<<<<< HEAD
 source = "git+https://github.com/sc2-sys/guest-components?branch=sc2-main#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+=======
+source = "git+https://github.com/sc2-sys/guest-components?rev=v0.10.0#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 dependencies = [
  "anyhow",
  "async-compression",
@@ -3282,7 +3308,11 @@ dependencies = [
 [[package]]
 name = "kbc"
 version = "0.1.0"
+<<<<<<< HEAD
 source = "git+https://github.com/sc2-sys/guest-components?branch=sc2-main#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+=======
+source = "git+https://github.com/sc2-sys/guest-components?rev=v0.10.0#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3311,7 +3341,11 @@ dependencies = [
 [[package]]
 name = "kbs_protocol"
 version = "0.1.0"
+<<<<<<< HEAD
 source = "git+https://github.com/sc2-sys/guest-components?branch=sc2-main#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+=======
+source = "git+https://github.com/sc2-sys/guest-components?rev=v0.10.0#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4323,7 +4357,11 @@ dependencies = [
 [[package]]
 name = "ocicrypt-rs"
 version = "0.1.0"
+<<<<<<< HEAD
 source = "git+https://github.com/sc2-sys/guest-components?branch=sc2-main#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+=======
+source = "git+https://github.com/sc2-sys/guest-components?rev=v0.10.0#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 dependencies = [
  "aes",
  "anyhow",
@@ -5361,8 +5399,13 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
+<<<<<<< HEAD
  "hyper 1.4.1",
  "hyper-tls 0.6.0",
+=======
+ "hyper",
+ "hyper-tls",
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
  "hyper-util",
  "ipnet",
  "js-sys",
@@ -5372,7 +5415,11 @@ dependencies = [
  "once_cell",
  "percent-encoding",
  "pin-project-lite",
+<<<<<<< HEAD
  "rustls-pemfile 2.1.2",
+=======
+ "rustls-pemfile",
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -5386,13 +5433,21 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
+<<<<<<< HEAD
  "winreg 0.52.0",
+=======
+ "winreg",
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 ]
 
 [[package]]
 name = "resource_uri"
 version = "0.1.0"
+<<<<<<< HEAD
 source = "git+https://github.com/sc2-sys/guest-components?branch=sc2-main#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+=======
+source = "git+https://github.com/sc2-sys/guest-components?rev=v0.10.0#075b9a9ee77227d9d92b6f3649ef69de5e72d204"
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 dependencies = [
  "anyhow",
  "serde",
@@ -5673,6 +5728,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "rustls-pemfile"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5682,6 +5738,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> dbec2c014 (agent: use native-tls for local registry with self-signed certs)
 name = "rustls-pemfile"
 version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
