@@ -690,8 +690,9 @@ func (q *qemu) CreateVM(ctx context.Context, id string, network Network, hypervi
 		qemuConfig.IOThreads = []govmmQemu.IOThread{*ioThread}
 	}
 	// Add RNG device to hypervisor
-	// Skip for s390x as CPACF is used
-	if machine.Type != QemuCCWVirtio {
+	// Skip for s390x as CPACF is used, also skip for confidential guests.
+	// See: https://kvm-forum.qemu.org/2024/kvm-2024_0H2FFRg.pdf
+	if machine.Type != QemuCCWVirtio && !hypervisorConfig.ConfidentialGuest {
 		rngDev := config.RNGDev{
 			ID:       rngID,
 			Filename: q.config.EntropySource,

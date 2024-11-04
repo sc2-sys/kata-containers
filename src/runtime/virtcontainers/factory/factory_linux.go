@@ -80,6 +80,8 @@ func resetHypervisorConfig(config *vc.VMConfig) {
 	config.HypervisorConfig.SharedPath = ""
 	config.HypervisorConfig.VMStorePath = ""
 	config.HypervisorConfig.RunStorePath = ""
+	config.HypervisorConfig.SandboxName = ""
+	config.HypervisorConfig.SandboxNamespace = ""
 }
 
 // It's important that baseConfig and newConfig are passed by value!
@@ -143,9 +145,11 @@ func (f *factory) GetVM(ctx context.Context, config vc.VMConfig) (*vc.VM, error)
 	}
 
 	// reseed RNG so that shared memory VMs do not generate same random numbers.
-	err = vm.ReseedRNG(ctx)
-	if err != nil {
-		return nil, err
+	if !config.HypervisorConfig.ConfidentialGuest {
+		err = vm.ReseedRNG(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// sync guest time since we might have paused it for a long time.
