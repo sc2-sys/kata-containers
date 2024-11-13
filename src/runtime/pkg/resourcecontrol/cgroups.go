@@ -68,7 +68,8 @@ func sandboxDevices() []specs.LinuxDeviceCgroup {
 	// need access to certain character devices in the host, like kvm and vhost-net.
 	hypervisorDevices := []string{
 		"/dev/kvm",         // To run virtual machines with KVM
-		"/dev/mshv",        // To run virtual machines with Hyper-V
+		// SC2: silence warning about errors setting-up /dev/mshv
+		// "/dev/mshv",        // To run virtual machines with Hyper-V
 		"/dev/vhost-net",   // To create virtqueues
 		"/dev/vfio/vfio",   // To access VFIO devices
 		"/dev/vhost-vsock", // To interact with vsock if
