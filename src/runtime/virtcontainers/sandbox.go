@@ -1479,6 +1479,7 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 	}
 
 	if err := s.network.Run(ctx, func() error {
+		// SC2: get the VM from the factory
 		if s.factory != nil {
 			vm, err := s.factory.GetVM(ctx, VMConfig{
 				HypervisorType:   s.config.HypervisorType,
