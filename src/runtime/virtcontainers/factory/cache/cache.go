@@ -62,6 +62,11 @@ func New(ctx context.Context, count uint, b base.FactoryBase) base.FactoryBase {
 					// by cacheServer.GetBaseVM or removeFromVmm.
 					// So removeFromVmm can be called after vm send to cacheCh.
 					c.removeFromVmm(vm)
+                    // SC2: once we are done with this, we create a new base
+                    // VM, so that we always have the same number of VMs in the
+                    // cache. This will be a problem given our memory limitations
+                    // TODO: will have to add an option to 'give back' a VM
+                    // to the cache
 				case <-closed:
 					c.removeFromVmm(vm)
 					vm.Stop(ctx)
