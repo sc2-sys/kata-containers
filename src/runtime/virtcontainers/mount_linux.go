@@ -156,6 +156,10 @@ func nydusContainerCleanup(ctx context.Context, sharedDir string, c *Container) 
 	if err != nil {
 		return err
 	}
+	// SC2: add wrapper for this error triggered when finishing a Job + VM cache
+	if virtiofsDaemon == nil {
+		return errors.Wrap(err, "virtiofs daemon is nil")
+	}
 	if err := virtiofsDaemon.Umount(rafsMountPath(c.id)); err != nil {
 		return errors.Wrap(err, "umount rafs failed")
 	}
