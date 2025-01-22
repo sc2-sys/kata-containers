@@ -22,6 +22,8 @@ use tracing::instrument;
 
 use self::bind_watcher_handler::BindWatcherHandler;
 use self::block_handler::{PmemHandler, ScsiHandler, VirtioBlkMmioHandler, VirtioBlkPciHandler};
+#[cfg(feature = "host-share-image-block")]
+use self::dm_verity_handler::DmVerityHandler;
 use self::ephemeral_handler::EphemeralHandler;
 use self::fs_handler::{OverlayfsHandler, Virtio9pHandler, VirtioFsHandler};
 #[cfg(feature = "guest-pull")]
@@ -34,6 +36,8 @@ pub use self::ephemeral_handler::update_ephemeral_mounts;
 
 mod bind_watcher_handler;
 mod block_handler;
+#[cfg(feature = "host-share-image-block")]
+mod dm_verity_handler;
 mod ephemeral_handler;
 mod fs_handler;
 #[cfg(feature = "guest-pull")]
@@ -150,6 +154,8 @@ lazy_static! {
             Arc::new(self::block_handler::VirtioBlkCcwHandler {}),
             #[cfg(feature = "guest-pull")]
             Arc::new(ImagePullHandler {}),
+            #[cfg(feature = "host-share-image-block")]
+            Arc::new(DmVerityHandler {}),
         ];
 
         for handler in handlers {
@@ -195,6 +201,9 @@ pub async fn add_storages(
                 sandbox,
             };
 
+            //TODO For dm-verity storage handler exclusively, it's necessary to verify the integrity of dm-verity information prior to creating the storage device.
+            // This is to ensure that the dm-verity storage device is not created with tampered data.
+            // The check logic ought to be invoked within `do_create_container` and precede the `add_storages` logic in `rpc.rs`.
             match handler.create_device(storage, &mut ctx).await {
                 Ok(device) => {
                     match sandbox
