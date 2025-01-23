@@ -34,7 +34,8 @@ docker pull ${container_image} || \
 	 # No-op unless PUSH_TO_REGISTRY is exported as "yes"
 	 push_to_registry "${container_image}")
 
-docker run --rm -i -v "${repo_root_dir}:${repo_root_dir}" \
+# SC2: we change the volume mount to support out-of-tree builds
+docker run --rm -i -v "$(pwd)/../..:$(pwd)/../.." \
 	-w "${PWD}" \
 	--env DESTDIR="${DESTDIR}" \
 	--env pause_image_repo="${pause_image_repo}" \
