@@ -3097,7 +3097,7 @@ dependencies = [
  "parking_lot 0.12.3",
  "percent-encoding",
  "regex",
- "reqwest",
+ "reqwest 0.12.5",
  "serde",
  "serde_json",
  "time",
