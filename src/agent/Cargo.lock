@@ -585,6 +585,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "bindgen"
+version = "0.69.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "271383c67ccabffb7381723dea0672a673f292304fcb45c01cc648c7a8d58088"
+dependencies = [
+ "bitflags 2.6.0",
+ "cexpr",
+ "clang-sys",
+ "itertools 0.10.5",
+ "lazy_static",
+ "lazycell",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "rustc-hash",
+ "shlex",
+ "syn 2.0.71",
+]
+
+[[package]]
 name = "binstring"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1622,6 +1642,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "devicemapper"
+version = "0.34.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfc1218171f91b60cfeb178048f076a79930acf1fe7c295e9304bd871da1bd35"
+dependencies = [
+ "bitflags 2.6.0",
+ "devicemapper-sys",
+ "env_logger",
+ "log",
+ "nix 0.29.0",
+ "once_cell",
+ "rand",
+ "retry",
+ "semver",
+ "serde",
+]
+
+[[package]]
+name = "devicemapper-sys"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d6681f5413e2094480381a97b8299f548c0579f07095ee20fe58e0a28cb34b5"
+dependencies = [
+ "bindgen 0.69.5",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1822,6 +1869,29 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.71",
+]
+
+[[package]]
+name = "env_filter"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "186e05a59d4c50738528153b83b0b0194d3a29507dfec16eccd4b342903397d0"
+dependencies = [
+ "log",
+ "regex",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.11.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcaee3d8e3cfc3fd92428d477bc97fc29ec8716d180c0d74c643bb26166660e0"
+dependencies = [
+ "anstream",
+ "anstyle",
+ "env_filter",
+ "humantime",
+ "log",
 ]
 
 [[package]]
@@ -2498,6 +2568,12 @@ name = "httpdate"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+
+[[package]]
+name = "humantime"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
 name = "hyper"
@@ -3263,7 +3339,9 @@ dependencies = [
  "base64 0.13.1",
  "bitmask-enum",
  "byte-unit",
+ "devicemapper",
  "glob",
+ "hex",
  "lazy_static",
  "num_cpus",
  "oci-spec",
@@ -3632,7 +3710,7 @@ name = "loopdev"
 version = "0.5.0"
 source = "git+https://github.com/mdaffin/loopdev?rev=c9f91e8f0326ce8a3364ac911e81eb32328a5f27#c9f91e8f0326ce8a3364ac911e81eb32328a5f27"
 dependencies = [
- "bindgen",
+ "bindgen 0.63.0",
  "errno 0.2.8",
  "libc",
 ]
@@ -5399,6 +5477,12 @@ dependencies = [
  "serde_json",
  "url",
 ]
+
+[[package]]
+name = "retry"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9166d72162de3575f950507683fac47e30f6f2c3836b71b7fbc61aa517c9c5f4"
 
 [[package]]
 name = "rfc6979"
