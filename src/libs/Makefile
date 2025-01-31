@@ -11,6 +11,10 @@ ifeq ($(USERID), 0)
     override EXTRA_TEST_FLAGS = --ignored
 endif
 
+# SC2: we enable the dm-verity feature of the build needed to host-share image
+# blocks/layers
+override EXTRA_RUSTFEATURES += dm-verity
+
 default: build
 
 build:
