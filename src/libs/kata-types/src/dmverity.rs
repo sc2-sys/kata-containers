@@ -8,7 +8,9 @@ use base64;
 use devicemapper::{DevId, DmFlags, DmName, DmOptions, DM};
 use serde_json;
 use std::convert::TryFrom;
+use std::fs;
 use std::path::Path;
+use std::process::{Command, Stdio};
 
 /// Configuration information for DmVerity device.
 #[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
@@ -150,6 +152,74 @@ impl TryFrom<&String> for DmVerityInfo {
     }
 }
 
+// TODO: delete me
+fn sl() -> slog::Logger {
+    slog_scope::logger()
+}
+
+/// Check if udevd is running by scanning the /proc filesystem. Prefer it over
+/// parsing the results of ps -aux
+fn is_udevd_running() -> Result<bool> {
+    let entries = fs::read_dir("/proc")?;
+
+    for entry in entries.filter_map(Result::ok) {
+        let cmdline_path = entry.path().join("cmdline");
+
+        if let Ok(cmdline) = fs::read_to_string(&cmdline_path) {
+            if cmdline.contains("udevd") {
+
+                return Ok(true);
+            }
+        }
+    }
+
+    Ok(false)
+}
+
+/// In order to use dm-verity, we need the /dev/mapper/control IOCTL to be
+/// set-up. This is done by udevd. Given that we do not use systemd, we need
+/// to start-up the daemon manually. We do so lazily here. In the future, when
+/// we move to using systemd, we should just make sure systemd starts the
+/// daemon instead.
+fn start_udevd() -> Result<()> {
+    if is_udevd_running()? {
+        return Ok(())
+    }
+
+    // This path is a symlink
+    let udevd_path = "/usr/lib/systemd/systemd-udevd";
+    if !Path::new(udevd_path).exists() {
+        return Err(anyhow::anyhow!("cannot find udevd at: {udevd_path}"));
+    }
+
+    info!(sl(), "SC2: starting udevd from path: {udevd_path}");
+    Command::new(udevd_path)
+        .arg("--daemon")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .with_context(|| format!("failed to start udevd at {}", udevd_path))?;
+
+    // Make sure udev has properly started before we return to the caller
+
+    for udev_cmd in ["trigger", "settle"] {
+        let mut output = Command::new("udevadm")
+            .arg(udev_cmd)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .with_context(|| format!("failed to run udevadm cmd: {udev_cmd}"))?;
+        output.wait().context(format!("failed to run udevadm cmd: {udev_cmd}"))?;
+    }
+
+    // Sanity check device is there
+    if !Path::new("/dev/mapper/control").exists() {
+        return Err(anyhow::anyhow!("cannot find /dev/mapper/control"));
+    }
+
+    Ok(())
+}
+
 /// Creates a mapping with <name> backed by data_device <source_device_path>
 /// and using hash_device for in-kernel verification.
 /// It will return the verity block device Path "/dev/mapper/<name>"
@@ -161,10 +231,24 @@ pub fn create_verity_device(
     //Make sure the fields in DmVerityInfo are validated.
     verity_option.validate()?;
 
+    // Lazily initialize the udev daemon
+    start_udevd()?;
+
+    info!(sl(), "SC2: will create new verity device at path: {:?} with options: {:?}",
+         source_device_path,
+         verity_option);
+    let dm_control_path = Path::new("/dev/mapper/control");
+    info!(sl(), "SC2: does /dev/mapper/control exist: {}", dm_control_path.exists());
+    info!(sl(), "SC2: is udevd running: {}", is_udevd_running()?);
+
     let dm = DM::new()?;
+    info!(sl(), "SC2: new?");
     let verity_name = DmName::new(&verity_option.hash)?;
+    info!(sl(), "SC2: name: {:?}", verity_name);
     let id = DevId::Name(verity_name);
+    info!(sl(), "SC2: name2: {:?}", verity_name);
     let opts = DmOptions::default().set_flags(DmFlags::DM_READONLY);
+    info!(sl(), "SC2: opts: {:?}", opts);
     let hash_start_block: u64 =
         (verity_option.offset + verity_option.hashsize - 1) / verity_option.hashsize;
 
@@ -206,10 +290,12 @@ pub fn create_verity_device(
         0,
         verity_option.blocknum * verity_option.blocksize / 512,
         "verity".into(),
-        verity_params,
+        verity_params.clone(),
     )];
 
+    info!(sl(), "SC2: creating verity device with name: {verity_name}");
     dm.device_create(verity_name, None, opts)?;
+    info!(sl(), "SC2: about to load table with options: {:?}", verity_params.clone());
     dm.table_load(&id, verity_table.as_slice(), opts)?;
     dm.device_suspend(&id, opts)?;
 

@@ -65,6 +65,8 @@ kernel_url=""
 linux_headers=""
 # Enable measurement of the guest rootfs at boot.
 measured_rootfs="false"
+# Enable dm-verity in the guest.
+dmverity_support="false"
 
 CROSS_BUILD_ARG=""
 
@@ -110,6 +112,7 @@ Options:
 	-t <hypervisor>	: Hypervisor_target.
 	-u <url>	: Kernel URL to be used to download the kernel tarball.
 	-v <version>	: Kernel version to use if kernel path not provided.
+    -V              : Enable dm-verity support.
 	-x       	: All the confidential guest protection type for a specific architecture.
 EOF
 	exit "$exit_code"
@@ -278,11 +281,18 @@ get_kernel_frag_path() {
 		all_configs="${all_configs} ${dpu_configs}"
 	fi
 
-	if [ "${measured_rootfs}" == "true" ]; then
-		info "Enabling config for confidential guest trust storage protection"
+    if [ "${dmverity_support}" == "true" ]; then
+		info "Enabling config for data protection with device mapper support"
 		local cryptsetup_configs="$(ls ${common_path}/confidential_containers/cryptsetup.conf)"
 		all_configs="${all_configs} ${cryptsetup_configs}"
+    fi
 
+    if [ "${measured_rootfs}" == "true" ]; then
+		if [ "${dmverity_support}" != "true" ]; then
+			info "Enabling config for confidential guest trust storage protection"
+			local cryptsetup_configs="$(ls ${common_path}/confidential_containers/cryptsetup.conf)"
+			all_configs="${all_configs} ${cryptsetup_configs}"
+		fi
 		check_initramfs_or_die
 		info "Enabling config for confidential guest measured boot"
 		local initramfs_configs="$(ls ${common_path}/confidential_containers/initramfs.conf)"
@@ -555,7 +565,7 @@ install_kata() {
 }
 
 main() {
-	while getopts "a:b:c:dD:eEfg:hH:k:mp:st:u:v:x" opt; do
+	while getopts "a:b:c:dD:eEfg:hH:k:mp:st:u:v:V:x" opt; do
 		case "$opt" in
 			a)
 				arch_target="${OPTARG}"
@@ -613,6 +623,9 @@ main() {
 				;;
 			v)
 				kernel_version="${OPTARG}"
+				;;
+            V)
+				dmverity_support="true"
 				;;
 			x)
 				conf_guest="confidential"
