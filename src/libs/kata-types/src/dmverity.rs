@@ -152,11 +152,6 @@ impl TryFrom<&String> for DmVerityInfo {
     }
 }
 
-// TODO: delete me
-fn sl() -> slog::Logger {
-    slog_scope::logger()
-}
-
 /// Check if udevd is running by scanning the /proc filesystem. Prefer it over
 /// parsing the results of ps -aux
 fn is_udevd_running() -> Result<bool> {
@@ -192,7 +187,6 @@ fn start_udevd() -> Result<()> {
         return Err(anyhow::anyhow!("cannot find udevd at: {udevd_path}"));
     }
 
-    info!(sl(), "SC2: starting udevd from path: {udevd_path}");
     Command::new(udevd_path)
         .arg("--daemon")
         .stdout(Stdio::null())
@@ -234,21 +228,10 @@ pub fn create_verity_device(
     // Lazily initialize the udev daemon
     start_udevd()?;
 
-    info!(sl(), "SC2: will create new verity device at path: {:?} with options: {:?}",
-         source_device_path,
-         verity_option);
-    let dm_control_path = Path::new("/dev/mapper/control");
-    info!(sl(), "SC2: does /dev/mapper/control exist: {}", dm_control_path.exists());
-    info!(sl(), "SC2: is udevd running: {}", is_udevd_running()?);
-
     let dm = DM::new()?;
-    info!(sl(), "SC2: new?");
     let verity_name = DmName::new(&verity_option.hash)?;
-    info!(sl(), "SC2: name: {:?}", verity_name);
     let id = DevId::Name(verity_name);
-    info!(sl(), "SC2: name2: {:?}", verity_name);
     let opts = DmOptions::default().set_flags(DmFlags::DM_READONLY);
-    info!(sl(), "SC2: opts: {:?}", opts);
     let hash_start_block: u64 =
         (verity_option.offset + verity_option.hashsize - 1) / verity_option.hashsize;
 
@@ -293,9 +276,7 @@ pub fn create_verity_device(
         verity_params.clone(),
     )];
 
-    info!(sl(), "SC2: creating verity device with name: {verity_name}");
     dm.device_create(verity_name, None, opts)?;
-    info!(sl(), "SC2: about to load table with options: {:?}", verity_params.clone());
     dm.table_load(&id, verity_table.as_slice(), opts)?;
     dm.device_suspend(&id, opts)?;
 
