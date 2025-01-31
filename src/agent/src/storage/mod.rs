@@ -201,9 +201,10 @@ pub async fn add_storages(
                 sandbox,
             };
 
-            //TODO For dm-verity storage handler exclusively, it's necessary to verify the integrity of dm-verity information prior to creating the storage device.
-            // This is to ensure that the dm-verity storage device is not created with tampered data.
-            // The check logic ought to be invoked within `do_create_container` and precede the `add_storages` logic in `rpc.rs`.
+            // TODO(sc2): for dm-verity storage handler we need to validate that
+            // the values provided by the host correspond to the ground-truth
+            // for our image. This feature needs to be implemented together
+            // with image signing.
             match handler.create_device(storage, &mut ctx).await {
                 Ok(device) => {
                     match sandbox
