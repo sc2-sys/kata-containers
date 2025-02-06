@@ -1437,10 +1437,11 @@ impl agent_ttrpc::AgentService for AgentService {
 
     async fn copy_file(
         &self,
-        ctx: &TtrpcContext,
+        _ctx: &TtrpcContext,
         req: protocols::agent::CopyFileRequest,
     ) -> ttrpc::Result<Empty> {
-        trace_rpc_call!(ctx, "copy_file", req);
+        // SC2: this trace is too verbose
+        // trace_rpc_call!(ctx, "copy_file", req);
         is_allowed(&req).await?;
 
         do_copy_file(&req).map_ttrpc_err(same)?;
