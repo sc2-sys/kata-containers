@@ -804,6 +804,7 @@ func (c *Container) createDeviceInfo(source, destination string, readonly, isBlo
 // call hypervisor to create device about KataVirtualVolume.
 func (c *Container) createVirtualVolumeDevices() ([]config.DeviceInfo, error) {
 	var deviceInfos []config.DeviceInfo
+	previousSource := ""
 	for _, o := range c.rootFs.Options {
 		if strings.HasPrefix(o, VirtualVolumePrefix) {
 			virtVolume, err := types.ParseKataVirtualVolume(strings.TrimPrefix(o, VirtualVolumePrefix))
@@ -813,12 +814,20 @@ func (c *Container) createVirtualVolumeDevices() ([]config.DeviceInfo, error) {
 			c.Logger().Infof("KataVirtualVolume volumetype = %s", virtVolume.VolumeType)
 
 			if virtVolume.VolumeType == types.KataVirtualVolumeImageRawBlockType || virtVolume.VolumeType == types.KataVirtualVolumeLayerRawBlockType {
+				// SC2: avoid creating duplicated devices when, e.g., two layers have the same digest
+				if previousSource == virtVolume.Source {
+					c.Logger().Warnf("Skipping KataVirtualVolume due to repeated source, likely layers with same digest")
+					previousSource = virtVolume.Source
+					continue
+				}
+
 				di, err := c.createDeviceInfo(virtVolume.Source, virtVolume.Source, true, true)
 				if err != nil {
 					return nil, err
 				}
 				deviceInfos = append(deviceInfos, *di)
 			}
+			previousSource = virtVolume.Source
 		}
 	}
 	return deviceInfos, nil
