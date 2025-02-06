@@ -2574,7 +2574,7 @@ func (k *kataAgent) copyFile(ctx context.Context, src, dst string) error {
 	k.Logger().WithFields(logrus.Fields{
 		"source": src,
 		"dest":   dst,
-	}).Debugf("Copying file from host to guest")
+	}).Trace("Copying file from host to guest")
 
 	// Handle the special case where the file is empty
 	if cpReq.FileSize == 0 {

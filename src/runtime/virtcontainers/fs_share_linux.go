@@ -308,7 +308,7 @@ func (f *FilesystemShare) ShareFile(ctx context.Context, c *Container, m *Mount)
 	// bind mount it in the shared directory.
 	caps := f.sandbox.hypervisor.Capabilities(ctx)
 	if !caps.IsFsSharingSupported() {
-		f.Logger().Debug("filesystem sharing is not supported, files will be copied")
+		f.Logger().Trace("filesystem sharing is not supported, files will be copied")
 
 		var ignored bool
 		srcRoot := filepath.Clean(m.Source)
@@ -336,7 +336,7 @@ func (f *FilesystemShare) ShareFile(ctx context.Context, c *Container, m *Mount)
 			}
 
 			dstPath := filepath.Join(guestPath, srcPath[len(srcRoot):])
-			f.Logger().Infof("ShareFile: Copying file from src (%s) to dest (%s)", srcPath, dstPath)
+			f.Logger().Tracef("ShareFile: Copying file from src (%s) to dest (%s)", srcPath, dstPath)
 			//TODO: Improve the agent protocol, to handle the case for existing symlink.
 			// Currently for an existing symlink, this will fail with EEXIST.
 			err = f.sandbox.agent.copyFile(ctx, srcPath, dstPath)
@@ -357,18 +357,18 @@ func (f *FilesystemShare) ShareFile(ctx context.Context, c *Container, m *Mount)
 					// The secret dir is of the form /var/lib/kubelet/pods/<uid>/volumes/kubernetes.io~secret/foo/{..data, key1, key2,...}
 					// The projected dir is of the form /var/lib/kubelet/pods/<uid>/volumes/kubernetes.io~projected/foo/{..data, key1, key2,...}
 					// The downward-api dir is of the form /var/lib/kubelet/pods/<uid>/volumes/kubernetes.io~downward-api/foo/{..data, key1, key2,...}
-					f.Logger().Infof("ShareFile: srcPath(%s) is a directory", srcPath)
+					f.Logger().Tracef("ShareFile: srcPath(%s) is a directory", srcPath)
 					err := f.watchDir(srcPath)
 					if err != nil {
 						f.Logger().WithError(err).Error("Failed to watch directory")
 						return err
 					}
 				} else {
-					f.Logger().Infof("ShareFile: srcPath(%s) is not a timestamped directory", srcPath)
+					f.Logger().Tracef("ShareFile: srcPath(%s) is not a timestamped directory", srcPath)
 				}
 				// Add the source and destination to the global map which will be used by the event loop
 				// to copy the modified content to the destination
-				f.Logger().Infof("ShareFile: Adding srcPath(%s) dstPath(%s) to srcDstMap", srcPath, dstPath)
+				f.Logger().Tracef("ShareFile: Adding srcPath(%s) dstPath(%s) to srcDstMap", srcPath, dstPath)
 				// Lock the map before adding the entry
 				f.srcDstMapLock.Lock()
 				defer f.srcDstMapLock.Unlock()
@@ -574,7 +574,6 @@ func (f *FilesystemShare) shareRootFilesystemWithVirtualVolume(ctx context.Conte
 		rootfs.Options = append(rootfs.Options, fmt.Sprintf("%s=%s", workDir, rootfsWorkDir))
 
 		rootFsStorages = append(rootFsStorages, rootfs)
-		f.Logger().Infof("SC2: verity rootfs info: %#v\n", rootfs)
 	}
 
 	return &SharedFile{
