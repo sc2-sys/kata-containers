@@ -487,6 +487,10 @@ fn parse_mount_flags(mut flags: MsFlags, flag_str: &str) -> Option<MsFlags> {
         "strictatime" => flags |= MsFlags::MS_STRICTATIME,
         "sync" => flags |= MsFlags::MS_SYNCHRONOUS,
         flag_str => {
+            if flag_str.starts_with("lowerdir") || flag_str.starts_with("upperdir") || flag_str.starts_with("workdir") {
+                // SC2: suppress the BUG warning for  overlay-style flags
+                return None;
+            }
             warn!(sl!(), "BUG: unknown mount flag: {:?}", flag_str);
             return None;
         }
