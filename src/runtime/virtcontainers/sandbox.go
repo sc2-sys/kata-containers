@@ -2092,8 +2092,14 @@ func (s *Sandbox) HotplugAddDevice(ctx context.Context, device api.Device, devTy
 
 	if s.sandboxController != nil {
 		if err := s.sandboxController.AddDevice(device.GetHostPath()); err != nil {
-			s.Logger().WithError(err).WithField("device", device).
-				Warnf("Could not add device to the %s controller", s.sandboxController)
+			// TODO: SC2: mounting `.disk` image files from the host to the
+			// guest triggers this warning, even though mounting happens
+			// correctly (probably before?) so we skip the warning ig the mount
+			// path ends with `.disk`
+			if !strings.HasSuffix(device.GetHostPath(), ".disk") {
+				s.Logger().WithError(err).WithField("device", device).
+					Warnf("Could not add device %v to the %s controller", device.GetHostPath(), s.sandboxController)
+			}
 		}
 	}
 
