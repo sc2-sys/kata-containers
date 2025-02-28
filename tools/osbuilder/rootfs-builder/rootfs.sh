@@ -13,7 +13,8 @@ set -o errtrace
 script_name="${0##*/}"
 script_dir="$(dirname $(readlink -f $0))"
 AGENT_VERSION=${AGENT_VERSION:-}
-RUST_VERSION="null"
+RUST_VERSION=${RUST_VERSION:-"null"}
+GO_VERSION=${GO_VERSION:-"null"}
 AGENT_BIN=${AGENT_BIN:-kata-agent}
 AGENT_INIT=${AGENT_INIT:-no}
 MEASURED_ROOTFS=${MEASURED_ROOTFS:-no}
@@ -435,18 +436,21 @@ build_rootfs_distro()
 
 		image_name="${distro}-rootfs-osbuilder"
 
+		if [ "$GO_VERSION" == "null" ]; then
+			GO_VERSION="$(get_package_version_from_kata_yaml "languages.golang.version")"
+		fi
+
 		if [ -n "${IMAGE_REGISTRY}" ]; then
 			engine_build_args+=" --build-arg IMAGE_REGISTRY=${IMAGE_REGISTRY}"
 		fi
-
 		# setup to install rust here
 		generate_dockerfile "${distro_config_dir}"
 		"$container_engine" build  \
 			${engine_build_args} \
 			--build-arg http_proxy="${http_proxy}" \
 			--build-arg https_proxy="${https_proxy}" \
-			--build-arg RUST_TOOLCHAIN="$(get_package_version_from_kata_yaml  "languages.rust.meta.newest-version")" \
-			--build-arg GO_VERSION="$(get_package_version_from_kata_yaml  "languages.golang.version")" \
+			--build-arg RUST_TOOLCHAIN="${RUST_VERSION}" \
+			--build-arg GO_VERSION="${GO_VERSION}" \
 			-t "${image_name}" "${distro_config_dir}"
 
 		# fake mapping if KERNEL_MODULES_DIR is unset
@@ -534,13 +538,13 @@ build_rootfs_distro()
 			--env AGENT_POLICY="${AGENT_POLICY}" \
 			--env CONFIDENTIAL_GUEST="${CONFIDENTIAL_GUEST}" \
 			--env NVIDIA_GPU_STACK="${NVIDIA_GPU_STACK}" \
-			-v "${repo_dir}":"/kata-containers" \
+			-v "${script_dir}":"/rootfs-builder" \
 			-v "${ROOTFS_DIR}":"/rootfs" \
 			-v "${script_dir}/../scripts":"/scripts" \
 			-v "${kernel_mod_dir}":"${kernel_mod_dir}" \
 			$engine_run_args \
 			${image_name} \
-			bash /kata-containers/tools/osbuilder/rootfs-builder/rootfs.sh "${distro}"
+			bash /rootfs-builder/rootfs.sh "${distro}"
 
 		exit $?
 	fi
