@@ -33,7 +33,7 @@ const_format = "0.2.30"
 # Async helpers
 async-trait = "0.1.42"
 async-recursion = "0.3.2"
-futures = "0.3.30"
+futures = "0.3.31"
 
 # Async runtime
 tokio = { version = "1.39.0", features = ["full"] }
@@ -79,7 +79,7 @@ strum = "0.26.2"
 strum_macros = "0.26.2"
 
 # Image pull/decrypt
-image-rs = { git = "https://github.com/sc2-sys/guest-components", branch = "sc2-main", default-features = false, features = ["nydus"], optional = true }
+image-rs = { git = "https://github.com/sc2-sys/guest-components", rev = "18cce30a2e193885c0a69d40e056c8999e5d5ced", default-features = false, features = ["nydus"], optional = true }
 
 # Agent Policy
 cdi = { git = "https://github.com/cncf-tags/container-device-interface-rs", rev = "fba5677a8e7cc962fc6e495fcec98d7d765e332a" }
