@@ -50,6 +50,11 @@ EOF
 	# E: Can't find a source to download version '2021.03.26' of 'ubuntu-keyring:amd64'
 	apt update
 
+	# SC2: fix a dbus configuration error complaining that it cannot find
+	# /dev/urandom
+	mkdir -p $rootfs_dir/dev
+	mknod -m 644 $rootfs_dir/dev/urandom c 1 9
+
 	if ! multistrap -a "$DEB_ARCH" -d "$rootfs_dir" -f "$multistrap_conf"; then
 		if [ "$OS_VERSION" = "focal" ]; then
 			echo "WARN: multistrap failed, proceed with hack for Ubuntu 20.04"
